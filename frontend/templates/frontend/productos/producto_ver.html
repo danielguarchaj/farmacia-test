@@ -1,0 +1,445 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Productos Detalle
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-productos">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Detalle de producto</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Detalle del producto</h4>
+                            <form class="form-sample">
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-sm-12">
+                                        <label for="producto_nombre">Nombre</label>
+                                        <input type="text" class="form-control input-limpiable" id="producto_nombre" placeholder="Nombre">
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-sm-6">
+                                        <label>Marca</label>
+                                        <select class="select-2 select-limpiable" id="producto_marca"></select>
+                                    </div>
+                                    <div class="form-group col-sm-6">
+                                        <label>Presentacion</label>
+                                        <select class="select-2 select-limpiable" id="producto_presentacion"></select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-sm-6">
+                                        <label for="producto_minimo_permitido">Minimo Permitido</label>
+                                        <input type="text" class="form-control input-limpiable" id="producto_minimo_permitido" placeholder="Minimo Permitido"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'int')">
+                                    </div>
+                                    <div class="form-group col-sm-6">
+                                        <label for="producto_precio_venta">Precio de venta</label>
+                                        <input type="text" class="form-control input-limpiable" id="producto_precio_venta" placeholder="Precio de venta"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-sm-6">
+                                        <label for="producto_referencia_ubicacion">Referencia de ubicacion</label>
+                                        <input type="text" class="form-control input-limpiable" id="producto_referencia_ubicacion" placeholder="Referencia de ubicacion">
+                                    </div>
+                                    <div class="form-group col-sm-6">
+                                        <label>Categoria</label>
+                                        <select class="select-2 select-limpiable" id="producto_categoria"></select>
+                                    </div>
+                                </div>
+                            </form>
+                            <button type="button" class="btn btn-outline-danger btn-fw adminonly" onclick="ProductoEliminar()">
+                                Eliminar
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-fw adminonly" onclick="ProductoEditar()">
+                                Guardar Cambios
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-fw" onclick="window.location.href='/productos/'">
+                                Regresar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Lotes</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Codigo</th>
+                                                    <th>Fecha Vencimiento</th>
+                                                    <th>Descripcion</th>
+                                                    <th>Existencia</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id='lotes-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h1 id="total-existencias"></h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% include 'global/components/modal.html' %}
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/productos/script.js' %}"></script>
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script>
+   /* const LoteEliminar = loteId => {
+        showAlert('warning-message-and-cancel', {
+            title: 'Eliminar Lote',
+            text: 'Esta seguro que desea eliminar el lote?'
+        })
+        $('.swal-button--confirm').on('click', async () => {
+            for (lote of lotes) {
+                if ( lote.id == loteId) {
+                    $(`#tr${loteId}`).remove()
+                    lotesEliminar.push(loteId)
+                    total = total - lote.subtotal
+                    $('#total').html('Total de la compra: Q'+Number(total).toFixed(2))
+                }
+            }
+        })
+    }*/
+    let lotes = []
+    let lotesEliminar = []
+    let lotesEditar = []
+    const ToggleRadio  = () => {
+        const radioSelected = $('input[name=optionsRadios]:checked').val()
+        if (radioSelected === '0') {
+            $('#lote_costo_unitario').prop('disabled', false)
+            $('#lote_subtotal').prop('disabled', true)
+        }else{
+            $('#lote_subtotal').prop('disabled', false)
+            $('#lote_costo_unitario').prop('disabled', true)
+        }
+    }
+
+    /*const LoteDetalle = async (loteId) => {
+        const bodyHtml = `
+            <form class="form-sample">
+                <div class="col-sm-12 row">
+                    <div class="form-group col-sm-12">
+                        <label>Producto</label>
+                        <select class="select-2 select-limpiable" id="lote_producto"></select>
+                    </div>
+                </div>
+                <div class="col-sm-12 row">
+                    <div class="form-group col-sm-8">
+                        <label>Observaciones</label>
+                        <textarea class="form-control input-limpiable" id="lote_observaciones"></textarea>
+                    </div>
+                    <div class="form-group col-sm-4">
+                        <label for="lote_producto_vencimiento">Fecha de vencimiento</label>
+                        <div id="datepicker-popup" class="input-group date datepicker">
+                            <input type="text" class="form-control input-limpiable" id="lote_producto_vencimiento"
+                                    onkeypress="return ValidarTeclaEnInput(event, 'datepicker')">
+                            <span class="input-group-addon input-group-append border-left">
+                                <span class="mdi mdi-calendar input-group-text"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12 row">
+                    <div class="form-group col-sm-3">
+                        <div class="form-check">
+                            <label class="form-check-label">
+                            <input type="radio" class="form-check-input" name="optionsRadios" id="radioCantidadComprada" value="0"
+                                    onclick="ToggleRadio()">
+                            Subtotal
+                            <i class="input-helper"></i></label>
+                            <input class="form-control input-limpiable" id="lote_cantidad"
+                                    onkeypress="return ValidarTeclaEnInput(event, 'int')" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-3">
+                        <div class="form-check">
+                            <label class="form-check-label">
+                            <input type="radio" class="form-check-input" name="optionsRadios" id="radioCostoUnitario" value="1" checked
+                                    onclick="ToggleRadio()">
+                            Costo Unitario
+                            <i class="input-helper"></i></label>
+                            <input class="form-control input-limpiable" id="lote_costo_unitario"
+                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-3">
+                        <div class="form-check">
+                            <label class="form-check-label">
+                            <input type="radio" class="form-check-input" name="optionsRadios" id="radioSubtotal" value="2"
+                                    onclick="ToggleRadio()">
+                            Subtotal
+                            <i class="input-helper"></i></label>
+                            <input class="form-control input-limpiable" id="lote_subtotal"
+                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-3">
+                        <label class="mb-3">Existencia Actual</label>
+                        <input class="form-control input-limpiable" id="lote_existencia">
+                    </div>
+
+                </div>
+            </form>
+        `
+        const footerHtml = `
+            <button type="button" class="btn btn-warning btn-rounded btn-fw" id="btn_crear_visita"
+                    onclick="LoteGuardarCambios(${loteId})">
+                Guardar Cambios
+            </button>
+            <button type="button" class="btn btn-light btn-rounded btn-fw" data-dismiss="modal">Cancelar</button>
+        `
+        ShowModal('modal', 'Detalle del lote', bodyHtml, footerHtml, 'modal-lg')
+        
+        try {
+            MostrarLoader()
+            await getProductosSelectCompras()
+            const {data} = await axios.get(`lotes/${loteId}`)
+            $('#lote_producto').val(lote.producto)
+            $('#lote_observaciones').val(lote.descripcion)
+            $('#lote_cantidad').val(lote.cantidad_comprada)
+            $('#lote_existencia').val(lote.existencia_actual)
+            if (lote.fecha_vencimiento) {
+                $('#lote_producto_vencimiento').val(moment(lote.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y'))
+            }
+            $('#lote_subtotal').val(lote.subtotal)
+            $('#lote_costo_unitario').val(lote.costo_unitario)
+            $('#modal-title').html(`Detalle del lote : ${lote.codigo}`)
+            $(".select-2").select2({
+                theme: "bootstrap",
+                width: 'auto',
+                dropdownAutoWidth: true
+            })
+            InitDatePickers()
+            OcultarLoader()
+
+            showAlert('warning-message-and-cancel', {
+                title: 'Guardar Cambios',
+                text: 'Esta seguro que desea guardar los cambios en el lote?'
+            })
+            $('.swal-button--confirm').on('click', async () => {
+                const lote_producto = $('#lote_producto').val()
+                const lote_observaciones = $('#lote_observaciones').val()
+                const lote_cantidad = $('#lote_cantidad').val()
+                const lote_existencia = $('#lote_existencia').val()
+                let lote_producto_vencimiento = $('#lote_producto_vencimiento').val()
+                let lote_subtotal = $('#lote_subtotal').val()
+                let lote_costo_unitario = $('#lote_costo_unitario').val()
+                let errores = false
+                if (!lote_producto) {
+                    showAlert('Seleccione el producto al que pertenece el lote')
+                    errores = true
+                }
+                if (!lote_producto) {
+                    showAlert('Seleccione el producto al que pertenece el lote')
+                    errores = true
+                }                
+            })
+
+        } catch(err) {
+            OcultarLoader()
+            showAlert('error-message', {title: 'No se pudo cargar el detalle del lote, intente nuevamente'})
+            console.log(err)
+        }
+    }*/
+
+    const getProductoDetalle = async () => {
+        try {
+            const {data} = await axios.get(`productos/${getUrlParameter()}/`)
+            $('#producto_marca').val(data.marca.id)
+            $('#producto_presentacion').val(data.presentacion.id)
+            $('#producto_nombre').val(data.nombre)
+            $('#producto_precio_venta').val(data.precio_venta)
+            $('#producto_minimo_permitido').val(data.minimo_permitido)
+            $('#producto_referencia_ubicacion').val(data.referencia_ubicacion)
+            $('#producto_categoria').val(data.categoria.id)
+            $(".select-2").select2({
+                theme: "bootstrap",
+                width: 'auto',
+                dropdownAutoWidth: true
+            });
+
+
+            if (!data.lotes[0]) showAlert('error-message', {title: 'Este producto aun no tiene lotes registrados'})
+            else {
+                lotes = data.lotes
+                let lotesHtml = ''
+                let cont = 0
+                let totalExistencias = 0
+                for (lote of data.lotes){
+                    let fecha = 'N/A'
+                    if (lote.fecha_vencimiento) fecha = moment(lote.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y')
+                    const existenciasLote = await getExistenciaActual(lote.id, lote.cantidad_comprada)
+                    totalExistencias += existenciasLote
+                    lotesHtml +=
+                    `
+                        <tr id="tr${lote.id}">
+                            <td>${++cont}</td>
+                            <td>${lote.codigo}</td>
+                            <td>${fecha}</td>
+                            <td>${lote.descripcion}</td>
+                            <td id="td_existencias_${lote.id}">${existenciasLote}</td>
+                            <td>
+                                <a href="/compras/${lote.compra}/" target="blank">Ver Compra</a>
+                            </td>
+                        </tr>
+                    `
+                }
+                $('#lotes-t-body').html(lotesHtml)
+                $('#total-existencias').html(`Total de existencias: ${totalExistencias}`)
+                InitDataTable()
+            }
+
+        } catch (err) {
+            console.log(err)
+            showAlert('error-message', {title: 'No se pudo cargar el detalle del producto, intente nuevamente.'})
+        }
+    }
+
+    const ProductoEditar = () => {
+        const productoId = getUrlParameter()
+        const producto_marca = $('#producto_marca').val()
+        const producto_presentacion = $('#producto_presentacion').val()
+        const producto_nombre = $('#producto_nombre').val()
+        const producto_precio_venta = $('#producto_precio_venta').val()
+        const producto_minimo_permitido = $('#producto_minimo_permitido').val()
+        const producto_referencia_ubicacion = $('#producto_referencia_ubicacion').val()
+        const producto_categoria = $('#producto_categoria').val()
+        let errores = false
+        if (!producto_marca) {
+            showDangerToast('Seleccione la marca del producto')
+            errores = true
+        }
+        if (!producto_presentacion) {
+            showDangerToast('Seleccione la presentacion del producto')
+            errores = true
+        }
+        if (producto_nombre == '') {
+            showDangerToast('El nombre del producto es requerido')
+            errores = true
+        }
+        if (producto_precio_venta == '') {
+            showDangerToast('El precio de venta del producto es requerido')
+            errores = true
+        }
+        if (!ValidarContenidoInput(producto_precio_venta, 'float82')) {
+            showDangerToast('El formato del precio de venta del producto invalido')
+            errores = true
+        }
+        if (producto_minimo_permitido == '') {
+            showDangerToast('El minimo permitido del producto es requerido')
+            errores = true
+        }
+        if (!ValidarContenidoInput(producto_minimo_permitido, 'int')) {
+            showDangerToast('El formato de la cantidad minima es invalido')
+            errores = true
+        }
+        if (!producto_categoria) {
+            showDangerToast('Seleccione la categoria del producto')
+            errores = true
+        }
+        
+        if (errores) return
+        
+
+        const data = {
+            nombre: producto_nombre,
+            precio_venta: producto_precio_venta,
+            referencia_ubicacion: producto_referencia_ubicacion,
+            minimo_permitido: producto_minimo_permitido,
+            presentacion: producto_presentacion,
+            marca: producto_marca,
+            categoria: producto_categoria
+        }
+
+        showAlert('warning-message-and-cancel', {
+            title: 'Editar Producto',
+            text: 'Esta seguro que quiere guardar los cambios?'
+        })
+
+        $('.swal-button--confirm').on('click', async function () {
+            try {
+                /*for (lote of lotes) {
+                    if (lotesEditar.indexOf(lote.id) > -1){
+                        await axios.patch(`lotes/${lote.id}/`, {
+                            fecha_vencimiento: lote.fecha_vencimiento,
+                            descripcion: lote.descripcion,
+                            cantidad_comprada: lote.cantidad_comprada,
+                            costo_unitario: lote.costo_unitario,
+                            subtotal: lote.subtotal,
+                            producto: lote.producto
+                        })
+                    }
+                    if (lotesEliminar.indexOf(lote.id) > -1){
+                        await axios.patch(`lotes/${lote.id}/`, {estado: 2})
+                    }
+                }*/
+                const response = await axios.patch(`productos/update/${productoId}/`, data)
+                if (response.status === 200) {
+                    OcultarLoader()
+                    showAlert('success-message', {
+                        title: 'Producto editado con exito'
+                    })
+                    $('.btn-success-confirm').on('click', function () {
+                        window.location.href = '/productos/'
+                    })
+                }
+            } catch (err) {
+                OcultarLoader()
+                showAlert('error-message', {
+                    title: 'No se pudo editar el producto, intente mas tarde'
+                })
+                console.log(err)
+            }
+        })
+    }
+
+    ( async () => {
+        await getMarcas()
+        await getPresentaciones()
+        await getCategorias()
+        MostrarLoader()
+        await getProductoDetalle()
+        await ValidarPermisos()
+        OcultarLoader()
+    })()
+</script>
+{% endblock %}

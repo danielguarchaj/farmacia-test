@@ -1,0 +1,287 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Consultas
+{% endblock  %}
+
+
+{% block content %}
+    <div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-consulta">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Detalle de consulta</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Detalle de la consulta</h4>
+                            <form class="form-sample">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="col-form-label">Paciente</label>
+                                            <select class="select-2" id="consulta_paciente">
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="card-description">
+                                    Signos vitales
+                                </p>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-md-6">
+                                        <label class="">Presion Arterial</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_presion_arterial"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'fraction')"/>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="">Latidos por minuto (lpm)</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_lpm" 
+                                        onkeypress="return ValidarTeclaEnInput(event, 'int')"/>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-md-6">
+                                        <label>Temperatura</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_temperatura" 
+                                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Nivel de Azucar</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_azucar"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 row">
+                                    <div class="form-group col-md-6">
+                                        <label>Peso (libras)</label>
+                                            <input type="text" class="form-control input-consulta" id="consulta_peso"
+                                            onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Costo</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_costo"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                </div>                                       
+                            </form>
+                            <button type="button" class="btn btn-outline-warning btn-fw adminonly" onclick="LimpiarCampos('.input-consulta')">
+                                Limpiar Campos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin" id="div_diagnostico">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Diagnostico</h4>
+                            <form class="form-sample">
+                                <div class="col-sm-12 row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Enfermedades</label>
+                                            <textarea class="form-control input-diagnostico" id="diagnostico_enfermedades" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Anotaciones</label>
+                                            <textarea class="form-control input-diagnostico" id="diagnostico_anotaciones" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                </div>                                                
+                            </form>
+                            <button type="button" class="btn btn-outline-warning btn-fw adminonly" onclick="LimpiarCampos('.input-diagnostico')">
+                                Limpiar Campos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin" id="div_tratamiento">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Tratamiento</h4>
+                            <form class="form-sample">
+                                <div class="col-sm-12 row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Medicamentos</label>
+                                            <textarea class="form-control input-tratamiento" id="tratamiento_medicamentos" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Anotaciones</label>
+                                            <textarea class="form-control input-tratamiento" id="tratamiento_anotaciones" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                </div>                                                
+                            </form>
+                            <button type="button" class="btn btn-outline-warning btn-fw adminonly" onclick="LimpiarCampos('.input-tratamiento')">
+                                Limpiar Campos
+                            </button>                       
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-menu">
+                    <div class="card">
+                        <div class="card-body">
+                            <button type="button" class="btn btn-outline-success btn-fw adminonly"
+                                id="btn_guardar_cambios_consulta">
+                                Guardar Cambios
+                            </button>
+                            <a class="btn btn-outline-danger btn-fw" href="{% url 'frontend:consultas' %}">Regresar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% include 'global/components/footer.html' %}
+        </div>
+    <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+{% endblock  %}
+
+
+{% block js %}
+<script src="{% static 'global/js/consultas/script.js' %}"></script>
+<script>
+    
+    const getConsultaDetalle = async () => {
+        let consultaId = getUrlParameter()
+        
+        try {
+            const { data } = await axios.get(`consulta-detail/${consultaId}/`)
+            
+            $('#consulta_paciente').val(data.paciente.id)
+            $('#consulta_presion_arterial').val(data.presion_arterial)
+            $('#consulta_lpm').val(data.latidos_minuto)
+            $('#consulta_temperatura').val(data.temperatura)
+            $('#consulta_azucar').val(data.nivel_azucar)
+            $('#consulta_peso').val(data.peso)
+            $('#consulta_costo').val(data.costo)
+            $('#diagnostico_enfermedades').val(data.diagnostico_enfermedades)
+            $('#diagnostico_anotaciones').val(data.diagnostico_anotaciones)
+            $('#tratamiento_medicamentos').val(data.tratamiento_medicamentos)
+            $('#tratamiento_anotaciones').val(data.tratamiento_anotaciones)
+
+            $(".select-2").select2({
+                theme: "bootstrap",
+                width: 'auto',
+                dropdownAutoWidth: true
+            })
+
+            $('#btn_guardar_cambios_consulta').on('click', () => {
+                GuardarCambiosConsulta(data.id)
+            })            
+        } catch (err) {
+            showAlert('error-message', {title: 'No se pudieron cargar los datos de la consulta, intente mas tarde'})
+        }
+        
+    }
+
+    const GuardarCambiosConsulta = (consultaId) => {
+        var consulta_paciente = $('#consulta_paciente').val()
+        var consulta_presion_arterial = $('#consulta_presion_arterial').val()
+        var consulta_lpm = $('#consulta_lpm').val()
+        var consulta_temperatura = $('#consulta_temperatura').val()
+        var consulta_azucar = $('#consulta_azucar').val()
+        var consulta_peso = $('#consulta_peso').val()
+        var consulta_costo = $('#consulta_costo').val()
+        var diagnostico_enfermedades = $('#diagnostico_enfermedades').val()
+        var diagnostico_anotaciones = $('#diagnostico_anotaciones').val()
+        var tratamiento_medicamentos = $('#tratamiento_medicamentos').val()
+        var tratamiento_anotaciones = $('#tratamiento_anotaciones').val()
+
+        var errors = false
+        if ( !ValidarContenidoInput(consulta_presion_arterial, 'fraction3/3') &&
+                consulta_presion_arterial != ''){
+            errors = true
+            showDangerToast('El formato de la presion arterial es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_temperatura, 'float82') &&
+                consulta_temperatura != ''){
+            errors = true
+            showDangerToast('El formato de la temperatura es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_azucar, 'float82') &&
+                consulta_azucar != ''){
+            errors = true
+            showDangerToast('El formato del nivel de azucar es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_peso, 'float82') &&
+                consulta_peso != ''){
+            errors = true
+            showDangerToast('El formato del peso es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_costo, 'float82') || consulta_costo == ''){
+            errors = true
+            showDangerToast('El formato del costo es incorrecto')
+        }
+        if (!consulta_paciente) {
+            errors = true
+            showDangerToast('Seleccione al paciente')
+        }
+
+        if (errors) return
+        
+        var data = {
+            presion_arterial: consulta_presion_arterial,
+            latidos_minuto: consulta_lpm,
+            temperatura: consulta_temperatura,
+            nivel_azucar: consulta_azucar,
+            peso: consulta_peso,
+            costo: consulta_costo,
+            diagnostico_enfermedades: diagnostico_enfermedades,
+            diagnostico_anotaciones: diagnostico_anotaciones,
+            tratamiento_medicamentos: tratamiento_medicamentos,
+            tratamiento_anotaciones: tratamiento_anotaciones,
+            paciente: consulta_paciente
+        }
+
+        showAlert('warning-message-and-cancel', {
+            title: 'Guardar Cambios',
+            text: 'Esta seguro que quiere guardar los cambios en la consulta?'
+        })
+
+        $('.swal-button--confirm').on('click', async function() {            
+            try {
+                MostrarLoader()
+                const response = await axios.patch(`consulta-update/${consultaId}/`, data)                
+                if (response.status === 200) {
+                        OcultarLoader()
+                        showAlert('success-message', {
+                            title: 'Cambios guardados con exito'
+                        })
+                        $('.btn-success-confirm').on('click', function () {
+                            window.location.href='/consultas/'
+                        })
+                    }
+            } catch (err) {
+                OcultarLoader()
+                showAlert('error-message', {title: 'No se pudieron guardar los cambios, intente mas tarde'})
+                console.log(err)
+            }
+        })
+
+    }
+
+    ( async () => {
+        MostrarLoader()
+        await populatePacientesSelect()
+        await getConsultaDetalle()
+        await ValidarPermisos()
+        OcultarLoader()
+    })()
+
+</script>
+{% endblock  %}

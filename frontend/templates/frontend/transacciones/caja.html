@@ -1,0 +1,246 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Caja
+{% endblock  %}
+
+
+{% block content %}
+    <div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+        <!-- Content -->
+        <div class="container-fluid page-body-wrapper">
+            {% include 'global/components/sidebar.html' %}
+            <div class="main-panel">
+                {% include 'global/components/loader.html' %}
+                <div class="content-wrapper loader-await" id="content-proveedores">
+                    <h1 class="text-light bg-dark pl-1 display-1">Transacciones</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <button class="btn btn-outline-success btn-fw mb-3" onclick="CrearTransaccionForm()" data-toggle="modal"
+                                data-target="#modal">
+                                Crear Nueva Transaccion
+                            </button>
+                            <div class="row adminonly">
+                            <h4 class="card-title">Listado General de Transacciones</h4>
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table data-table table-hover">
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Tipo</th>
+                                                <th>Encargado</th>
+                                                <th>Descripcion</th>
+                                                <th>Creacion</th>
+                                                <th>Monto</th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id='transacciones-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'global/components/footer.html' %}
+            </div>
+            <!-- main-panel ends -->
+        </div>
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    {% include 'global/components/modal.html' %}
+{% endblock  %}
+
+
+{% block js %}
+<script src="{% static 'global/js/proveedores/script.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            MostrarLoader()
+            await getTransacciones()
+            await ValidarPermisos()
+            OcultarLoader()
+        })
+        let balance = 0
+        let ventas = 0
+        let compras = 0
+        let consultas = 0
+        const getTransacciones = async () => {
+            try {
+                const { data } = await axios.get('transacciones/')                              
+                let transaccionesHtml = ''
+                let cont = 0
+                for (transaccion of data) {       
+                    let tipo = ''
+                    if (transaccion.tipo == 1) {
+                        tipo = '<div class="badge badge-danger">Debito</div>'
+                        balance -= Number(transaccion.monto)
+                    }
+                    else if (transaccion.tipo == 2) {
+                        tipo = '<div class="badge badge-success">Credito</div>'
+                        balance += Number(transaccion.monto)
+                    }
+                    transaccionesHtml += `
+                        <tr>
+                            <td>${++cont}</td>
+                            <td>${tipo}</td>
+                            <td>${transaccion.usuario.nombres} ${transaccion.usuario.apellidos}</td>
+                            <td>${transaccion.descripcion}</td>
+                            <td>${moment(transaccion.fecha_hora_creacion, 'Y-MM-DD T H-m-s Z').format('DD/MM/Y, h:mm:ss a')}</td>
+                            <td>Q${Number(transaccion.monto).toFixed(2)}</td>
+                            <td>
+                                <i class="mdi mdi-trash-can adminonly" onclick="TransaccionEliminar(${transaccion.id})"></i>
+                            </td>
+                        </tr>
+                    `
+                }
+                $('#transacciones-t-body').html(transaccionesHtml)
+                /*balance += (ventasTotales.data.total + consultasTotales.data.total)
+                balance -= comprasTotales.data.total
+                $('#ventas_totales').html(`Total de ingresos en ventas : + Q${ventasTotales.data.total.toFixed(2)}`)
+                $('#consultas_totales').html(`Total de ingresos consultas : \t + Q${consultasTotales.data.total.toFixed(2)}`)
+                $('#compras_totales').html(`Total de egresos en compras : - Q${comprasTotales.data.total.toFixed(2)}`)
+                if (balance < 0) {
+                    $('#balance').css('color', 'red')
+                    $('#balance').html(`Balance actual : -Q${Math.abs(balance.toFixed(2))}`)
+                }else{
+                    $('#balance').css('color', 'green')
+                    $('#balance').html(`Balance actual : Q${Math.abs(balance.toFixed(2))}`)
+                }*/
+                InitDataTable()
+            }catch (err){
+                showAlert('error-message', {title: 'No se pudieron cargar las transacciones, intente nuevamente'})
+                console.log(err)
+            }
+        }
+
+        const CrearTransaccionForm = (refresh) => {
+            const bodyHtml = `
+                <form class="">
+                    <div class="form-group">
+                        <label for="transaccion_tipo">Tipo de transaccion</label>
+                        <select class="form-control form-control-lg" id="transaccion_tipo">
+                            <option value="0" disabled selected>Selecciona el tipo de transaccion</option>
+                            <option value="1">Debito</option>
+                            <option value="2">Credito</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transaccion_monto">Monto</label>
+                        <input type="text" class="form-control" id="transaccion_monto" placeholder="Monto"
+                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                    </div>
+                    <div class="form-group">
+                        <label for="transaccion_descripcion">Descripcion</label>
+                        <textarea class="form-control" id="transaccion_descripcion" placeholder="Descripcion de la transaccion"></textarea>
+                    </div>
+                </form>
+            `
+            const footerHtml = `
+                <button type="button" class="btn btn-info btn-rounded btn-fw loader-await" id="btn_crear_transaccion">Crear Transaccion</button>
+                <button type="button" class="btn btn-light btn-rounded btn-fw" data-dismiss="modal">Cancelar</button>
+            `
+            ShowModal('modal', 'Nueva Transaccion', bodyHtml, footerHtml)
+
+            $('#btn_crear_transaccion').on('click', async () => {
+                const transaccion_tipo = $('#transaccion_tipo').val()
+                const transaccion_monto = $('#transaccion_monto').val()
+                const transaccion_descripcion = $('#transaccion_descripcion').val()
+                let errors = false
+                if ( !transaccion_tipo ) {
+                    showDangerToast('Seleccione el tipo de transaccion')
+                    errors = true
+                }
+                if ( !ValidarContenidoInput(transaccion_monto, 'float82') && transaccion_monto != '' ) {
+                    showDangerToast('Formato del monto ingresado invalido')
+                    errors = true
+                }
+
+                if ( transaccion_monto==='' ) {
+                    showDangerToast('Ingrese un monto para la transaccion')
+                    errors = true
+                }
+
+                if ( transaccion_descripcion === '' ) {
+                    showDangerToast('Ingrese una descripcion a la transaccion')
+                    errors = true
+                }
+
+                if (errors) return
+
+                const data = {
+                    monto: transaccion_monto,
+                    tipo: transaccion_tipo,
+                    descripcion: transaccion_descripcion
+                }
+
+                showAlert('warning-message-and-cancel', {
+                    title: 'Crear Transaccion',
+                    text: 'Esta seguro que quiere crear la transaccion?'
+                })
+
+                $('.swal-button--confirm').on('click', async function() {            
+                    try {
+                        MostrarLoader()
+                        const response = await axios.post('transacciones/create/', data)
+                        if (response.status === 201) {
+                            OcultarLoader()
+                            showAlert('success-message', {
+                                title: 'Transaccion creada con exito'
+                            })
+                            $('.btn-success-confirm').on('click', async function () {
+                                if (refresh === 'refresh') {
+                                    //await getProveedores()
+                                    $('#modal').modal('toggle')
+                                }else{
+                                    location.reload()
+                                }
+                            })
+                        }
+                    } catch (err) {
+                        OcultarLoader()
+                        showAlert('error-message', {title: 'No se pudo crear la transaccion, intente mas tarde'})
+                        console.log(err)
+                    }
+                })
+
+            })
+
+        }
+
+        const TransaccionEliminar = (transaccionId) => {
+            showAlert('warning-message-and-cancel', {
+                title: 'Eliminar Transaccion',
+                text: 'Esta seguro que desea eliminar la transaccion?'
+            })
+            $('.swal-button--confirm').on('click', async () => {
+                try {
+                    MostrarLoader()
+                    const response = await axios.patch(`transacciones/${transaccionId}/`, {estado: 2})
+                    showAlert('success-message', {
+                        title: 'Transaccion eliminada',
+                        button: {
+                            text: 'Continuar'
+                        }
+                    })
+                    OcultarLoader()
+                    $('.btn-success-confirm').on('click', () => {                        
+                        location.reload()
+                    })
+                    
+                }catch (err) {
+                    showAlert('error-message', {title: 'No se pudo eliminar la transaccion, intente nuevamente.'})
+                    console.log(err)
+                }
+            })
+        }
+
+    </script>
+{% endblock  %}

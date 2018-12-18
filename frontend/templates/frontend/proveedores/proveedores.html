@@ -1,0 +1,157 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Proveedores
+{% endblock  %}
+
+
+{% block content %}
+    <div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+        <!-- Content -->
+        <div class="container-fluid page-body-wrapper">
+            {% include 'global/components/sidebar.html' %}
+            <div class="main-panel">
+                {% include 'global/components/loader.html' %}
+                <div class="content-wrapper loader-await" id="content-proveedores">
+                    <h1 class="text-light bg-dark pl-1 display-1">Listado de proveedores</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <button class="btn btn-outline-success btn-fw mb-3" onclick="crearProveedorForm()" data-toggle="modal"
+                                data-target="#modal">
+                                Crear Proveedor
+                            </button>
+                            <h4 class="card-title">Listado General de Proveedores</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table data-table table-hover">
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Nombre</th>
+                                                <th>Telefono</th>
+                                                <th>Direccion</th>
+                                                <th>Email</th>
+                                                <th>Estado</th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id='proveedores-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'global/components/footer.html' %}
+            </div>
+            <!-- main-panel ends -->
+        </div>
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    {% include 'global/components/modal.html' %}
+{% endblock  %}
+
+
+{% block js %}
+<script src="{% static 'global/js/proveedores/script.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            MostrarLoader()
+            await getProveedores()
+            await ValidarPermisos()
+            OcultarLoader()
+        })
+        
+        const getProveedores = async () => {
+            try {
+                const { data } = await axios.get('proveedores/')
+                await actualizarEstadoVisitas(data)
+                let proveedoresHtml = ''
+                let cont = 0
+                for (proveedor of data) {
+                    cont++
+
+                    let estado = '<div class="badge badge-success">No tiene visitas pendientes</div>'
+                    
+                    for (visita of proveedor.visitas) {
+                        if (visita.estado == 1)
+                        estado = '<div class="badge badge-warning">Visitas pendientes</div>'
+                    }
+                    
+                    proveedoresHtml += `
+                        <tr>
+                            <td>${cont}</td>
+                            <td>${proveedor.nombre}</td>
+                            <td>${proveedor.telefono}</td>
+                            <td>${proveedor.direccion}</td>
+                            <td>${proveedor.email}</td>
+                            <td>${estado}</td>
+                            <td>
+                                <i class="mdi mdi-eye-outline mr-3" onclick="window.location.href='${proveedor.id}/'"></i>
+                                <i class="mdi mdi-trash-can adminonly" onclick="ProveedorEliminar(${proveedor.id})"></i>
+                            </td>
+                        </tr>
+                    `
+                }
+                $('#proveedores-t-body').html(proveedoresHtml)
+                InitDataTable()
+            }catch (err){
+                showAlert('error-message', {title: 'No se pudieron cargar los proveedores, intente mas tarde'})
+                console.log(err)
+            }
+        }
+
+        const ProveedorEliminar = (proveedorId) => {
+            showAlert('warning-message-and-cancel', {
+                title: 'Eliminar Proveedor',
+                text: 'Esta seguro que desea eliminar al proveedor?'
+            })
+            $('.swal-button--confirm').on('click', async () => {
+                try {
+                    MostrarLoader()
+                    const response = await axios.patch(`proveedores/${proveedorId}/`, {estado: 2})
+                    showAlert('success-message', {
+                        title: 'Proveedor eliminado',
+                        button: {
+                            text: 'Continuar'
+                        }
+                    })
+                    OcultarLoader()
+                    $('.btn-success-confirm').on('click', () => {                        
+                        location.reload()
+                    })
+                    
+                }catch (err) {
+                    console.log(err)
+                }
+            })
+        }
+
+        const actualizarEstadoVisitas = async (proveedores) => {
+            for (proveedor of proveedores) {
+                for (visita of proveedor.visitas) {
+                    let fecha = moment(visita.fecha, "YYYY MM DD")
+                    let fechaHoy = moment(new Date()).format('YYYY MM DD')
+
+                    var fechaInicio = new Date(fecha).getTime()
+                    var fechaFin    = new Date(fechaHoy).getTime()
+                    var diff = (fechaInicio - fechaFin) / (1000*60*60*24)
+
+                    fecha = fecha.format('DD/MM/YYYY')
+
+                    if ( diff < 0 && visita.estado != 3) {                        
+                        await axios.patch(`visitas/${visita.id}/`, {estado: 3})
+                    }
+                }
+            }
+        }
+
+    </script>
+{% endblock  %}

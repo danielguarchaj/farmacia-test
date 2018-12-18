@@ -1,0 +1,349 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Ventas
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-compras">
+                <h1 class="text-light bg-dark pl-1 display-1">Nueva Venta</h1>
+                <div class="accordion accordion-solid-header" id="accordion-ventas" role="tablist">
+                    <div class="card">
+                        <div class="card-header" role="tab" id="heading-productos">
+                            <h6 class="mb-0">
+                                <a data-toggle="collapse" href="#collapse-productos" aria-expanded="true" aria-controls="collapse-productos">
+                                    Productos Disponibles
+                                </a>
+                            </h6>
+                        </div>
+                        <div id="collapse-productos" class="collapse show" role="tabpanel" aria-labelledby="heading-productos" data-parent="#accordion-ventas">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="table-responsive">
+                                            <table class="table data-table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Lote</th>
+                                                        <th>Producto</th>
+                                                        <th>Marca</th>
+                                                        <th>Categoria</th>
+                                                        <th>Precio Venta</th>
+                                                        <th>Fecha de vencimiento</th>
+                                                        <th>Existencias</th>
+                                                        <th>Opciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id='lotes-t-body'>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" role="tab" id="heading-ventas">
+                            <h6 class="mb-0">
+                                <a class="collapsed" data-toggle="collapse" href="#collapse-ventas" aria-expanded="false" aria-controls="collapse-ventas">
+                                    Venta Actual
+                                </a>
+                            </h6>
+                        </div>
+                        <div id="collapse-ventas" class="collapse" role="tabpanel" aria-labelledby="heading-ventas" data-parent="#accordion-ventas">
+                            <div class="card px-2" id="div-ventas">
+                                <div class="card-body">
+                                    <textarea class="form-control mb-3" id="venta_anotaciones" rows="3" placeholder="Escribir anotaciones aqui"></textarea>
+                                    <div class="container-fluid mt-0 d-flex justify-content-center w-100">
+                                        <div class="table-responsive w-100">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr class="bg-dark text-black">
+                                                        <th>#</th>
+                                                        <th>Codigo</th>
+                                                        <th>Producto</th>
+                                                        <th>Cantidad</th>
+                                                        <th>Costo Unitario</th>
+                                                        <th>Subtotal</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="venta-t-body"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="container-fluid mt-5 w-100">
+                                        <h4 class="text-right mb-5" id="total">Total : Q00.00</h4>
+                                        <hr>
+                                    </div>
+                                    <div class="container-fluid w-100 mb-10">
+                                        <a href="#" class="btn btn-success float-right mt-4" onclick="GuardarVenta()">
+                                            <i class="mdi mdi-content-save mr-1">
+                                        </i>Guardar Venta</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% include 'global/components/modal.html' %}
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script>
+
+    const getLotes = async () => {
+        try {
+            const {data} = await axios.get('lotes/')
+            let lotesHtml = ''
+            for (const lote of data) {
+                const existenciaActual = await getExistenciaActual(lote.id, lote.cantidad_comprada)
+                let fecha = 'N/A'
+                if (lote.fecha_vencimiento) fecha = moment(lote.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y')
+                let producto = ''
+                if (lote.producto.nombre) producto += lote.producto.nombre + ' - '
+                if (lote.producto.presentacion.nombre) producto += lote.producto.presentacion.nombre + ' - '
+                if (lote.producto.presentacion.descripcion) producto += lote.producto.presentacion.descripcion
+                lotesHtml += `
+                    <tr id="tr_productos_${lote.id}">
+                        <td>${lote.codigo}</td>
+                        <td>
+                            <a href="/productos/${lote.producto.id}/" target="blank">${producto}</a>
+                        </td>
+                        <td>${lote.producto.marca.nombre}</td>
+                        <td>${lote.producto.categoria.nombre} - ${lote.producto.categoria.descripcion}</td>
+                        <td>${Number(lote.producto.precio_venta).toFixed(2)}</td>
+                        <td>${fecha}</td>
+                        <td>${existenciaActual}</td>
+                        <td>
+                            <button class="btn btn-outline-primary" onclick="AgregarLote(${lote.id})"
+                                    data-toggle="modal" data-target="#modal">Agregar a la venta</button>
+                        </td>
+                    </tr>
+                `
+            }
+            $('#lotes-t-body').html(lotesHtml)
+            InitDataTable()
+        }catch (err) {
+            showAlert('error-message', {title: 'No se pudo cargar el inventario, intente mas tarde.'})
+        }
+    }
+    let detalle_venta = []
+    let detalle_tabla = []
+    let total = 0
+    const AgregarLote = async loteId => {
+        const bodyHtml = `
+            <p class="card-description mb-3" id="lote_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_marca_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_disponibilidad_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_vencimiento_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_precio_venta_original"></p>
+            <hr>
+            <form class="">
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label for="venta_cantidad"><b>Cantidad a vender</b></label>
+                        <input type="text" class="form-control" id="venta_cantidad" placeholder="Cantidad a vender"
+                                onkeypress="return ValidarTeclaEnInput(event, 'int')">
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label for="venta_precio_real"><b>Cambiar Precio</b></label>
+                        <input type="text" class="form-control" id="venta_precio_real" placeholder="Precio Venta"
+                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                    </div>
+                </div>
+            </form>
+        `
+        const footerHtml = `
+            <button type="button" class="btn btn-info btn-rounded btn-fw loader-await" id="btn_agregar_lote">Agregar</button>
+            <button type="button" class="btn btn-light btn-rounded btn-fw" data-dismiss="modal">Cancelar</button>
+        `
+        ShowModal('modal', 'Agregar Producto', bodyHtml, footerHtml)
+        let _data = {}
+        let existenciaActual = 0
+        try {
+            MostrarLoader()
+            const {data} = await axios.get(`lotes-detailed/${loteId}/`)          
+            _data = data
+            existenciaActual = await getExistenciaActual(data.id, data.cantidad_comprada)
+            $('#lote_seleccionado').html( `<b>Producto: </b>
+                ${data.producto.nombre} -
+                ${data.producto.presentacion.nombre} -
+                ${data.producto.presentacion.descripcion}
+            `)
+            $('#lote_marca_seleccionado').html( `<b>Marca: </b> ${data.producto.marca.nombre}` )
+            $('#lote_disponibilidad_seleccionado').html( '<b>Disponibilidad: </b> ' + existenciaActual )
+            if (data.fecha_vencimiento) $('#lote_vencimiento_seleccionado').html('<b>Fecha de vencimiento: </b>' +
+                                            moment(data.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y') )
+            $('#lote_precio_venta_original').html( `<b>Precio Original: </b> Q${data.producto.precio_venta}` )
+            $('#venta_precio_real').val( data.producto.precio_venta )
+            OcultarLoader()
+            
+        } catch (err) {
+            console.log(err)
+            OcultarLoader()
+            showAlert('error-message', {title: 'No se pudo cargar la informacion del lote seleccionado'})
+        }
+
+        $('#btn_agregar_lote').on('click', () => {
+            const precio_venta = $('#venta_precio_real').val()
+            const cantidad = $('#venta_cantidad').val()
+            let errors = false
+            if (precio_venta === ''  ){
+                showDangerToast('Ingrese el precio de venta')
+                errors = true
+            }
+            if (Number(cantidad) < 1 || cantidad === '') {
+                showDangerToast('Ingrese una cantidad valida')
+                errors = true
+            }
+            if (Number(cantidad) > Number(existenciaActual)){
+                showDangerToast('No existen suficientes productos para suplir la venta.')
+                errors = true
+            }
+            for (detalle of detalle_venta){
+                if (detalle.lote == _data.id) {
+                    showDangerToast('El producto ya ha sido agregado a la venta')
+                    errors = true
+                }
+            }
+
+            if (errors) return
+
+            detalle_venta.push({
+                cantidad: cantidad,
+                precio_venta_real: precio_venta,
+                lote: _data.id,
+                subtotal: (Number(cantidad) * Number(precio_venta)).toFixed(2)
+            })
+            let producto = ''
+            if (_data.producto.nombre) producto += _data.producto.nombre + ' - '
+            if (_data.producto.presentacion.nombre) producto += _data.producto.presentacion.nombre + ' - '
+            if (_data.producto.presentacion.descripcion) producto += _data.producto.presentacion.descripcion + ' - '
+            if (_data.producto.marca.nombre) producto += _data.producto.marca.nombre
+            detalle_tabla.push({
+                lote_id: _data.id,
+                lote_codigo: _data.codigo,
+                producto:producto,
+                cantidad: cantidad,
+                precio_venta_real: `Q${Number(precio_venta).toFixed(2)}`,
+                subtotal: (Number(cantidad) * Number(precio_venta)).toFixed(2)
+            })
+            showSuccessToast('Producto agregado')
+            $('#tr_productos_'+loteId).hide()
+            ActualizarTablaVenta()
+            $('#modal').modal('toggle')
+        })
+    }
+
+    const ActualizarTablaVenta = () => {
+        let detalleHtml = ''
+        let cont = 0
+        total = 0
+        for (detalle of detalle_tabla){
+            detalleHtml += `
+                <tr>
+                    <td>${++cont}</td>
+                    <td>
+                        ${detalle.lote_codigo}
+                    </td>
+                    <td>
+                        ${detalle.producto}
+                    </td>
+                    <td>${detalle.cantidad}</td>
+                    <td>${detalle.precio_venta_real}</td>
+                    <td>Q${detalle.subtotal}</td>
+                    <td>
+                        <i class="mdi mdi-close-outline" style="color:red;" onclick="RemoverLoteDeVenta(${detalle.lote_id})">
+                    </td>
+                </tr>
+            `
+            total += Number(detalle.subtotal)
+        }
+        $('#total').html(`Total : Q${total.toFixed(2)}`)
+        $('#venta-t-body').html(detalleHtml)
+    }
+
+    const RemoverLoteDeVenta = loteId => {
+        showAlert('warning-message-and-cancel', {
+            title: 'Remover producto',
+            text: 'Esta seguro que desea quitar el producto de la venta actual?'
+        })
+        $('.swal-button--confirm').on('click', async () => {
+            for (index in detalle_venta){
+                if (detalle_venta[index].lote == loteId) {
+                    detalle_venta.splice(index, 1)
+                }
+            }
+            for (index in detalle_tabla){
+                if (detalle_tabla[index].lote_id == loteId) {
+                    detalle_tabla.splice(index, 1)
+                }
+            }
+            $('#tr_productos_' + loteId).show()
+            ActualizarTablaVenta()
+        })
+    }
+
+    const GuardarVenta = async () => {
+        if ( detalle_venta.length < 1) {
+            showAlert('error-message', {title: 'Ingrese al menos un producto para la venta'})
+            return
+        }
+        showAlert('warning-message-and-cancel', {
+            title: 'Guardar Venta',
+            text: 'Esta seguro que desea guardar la venta actual?'
+        })
+        $('.swal-button--confirm').on('click', async () => {
+            MostrarLoader()
+            const venta = {
+                detalle_venta: detalle_venta,
+                total: Number(total).toFixed(2),
+                observaciones: $('#venta_anotaciones').val()
+            }
+            try {
+                const response = await axios.post('ventas/create/', venta)
+                if (response.status === 201) {
+                    for (lote of detalle_venta){
+                        const loteDetalle = await axios.get(`lotes/${lote.lote}/`)
+                    }
+                    OcultarLoader()
+                    showAlert('success-message', {title: 'Venta guardada con exito'})
+                    location.reload()
+                }
+            } catch(err) {
+                OcultarLoader()
+                showAlert('error-message', {title: 'No se pudo guardar la venta, intente mas tarde.'})
+            }
+        })     
+    }
+
+    ( async () => {
+        MostrarLoader()
+        await getLotes()
+        $('#nueva-venta-btn').hide()
+        OcultarLoader()
+    }) ()
+</script>
+{% endblock %}

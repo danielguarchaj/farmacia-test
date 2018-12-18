@@ -1,0 +1,242 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Detalle de compra
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-compras">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Detalle de compra</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-12">
+                                    <h2>Proveedor de la compra</h2>
+                                    <select class="select-2" id="compra_proveedor"></select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label>Anotaciones</label>
+                                    <textarea class="form-control" id="compra_observaciones"></textarea>
+                                </div>
+                                <button type="button" class="btn btn-outline-success btn-fw mr-3" onclick="GuardarCambios()">
+                                    Guardar Cambios
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-fw mr-3" onclick="CompraEliminar()">
+                                    Eliminar Compra
+                                </button>
+                                <a class="btn btn-outline-danger btn-fw" href="{% url 'frontend:compras' %}">
+                                    Regresar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title"><b>Detalle de lotes comprados</b></h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Codigo</th>
+                                                    <th>Fecha de vencimiento</th>
+                                                    <th>Producto</th>
+                                                    <th>Cantidad comprada</th>
+                                                    <th>Precio unitario</th>
+                                                    <th>Subtotal</th>
+                                                    <th>Opciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id='detalle-compra-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 id="total"></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% include 'global/components/modal.html' %}
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script>
+    let lotes = []
+    let lotesEliminar = []
+    let lotesEditar = []
+    let total = 0
+
+    const ToggleRadio  = () => {
+        const radioSelected = $('input[name=optionsRadios]:checked').val()
+        if (radioSelected === '0') {
+            $('#lote_costo_unitario').prop('disabled', false)
+            $('#lote_subtotal').prop('disabled', true)
+        }else{
+            $('#lote_subtotal').prop('disabled', false)
+            $('#lote_costo_unitario').prop('disabled', true)
+        }
+    }
+
+    const getDetalleCompra = async () => {
+        try {
+            MostrarLoader()
+            const compraId = getUrlParameter()
+            const {
+                data
+            } = await axios.get(`compras/${compraId}/`)
+            lotes = data.lotes
+            let cont = 0
+            let comrpasHtml = ''
+            for(lote of data.lotes){
+                cont++
+                let fecha_vencimiento  = 'N/A'
+                if (lote.fecha_vencimiento) fecha_vencimiento = moment(lote.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y')
+                comrpasHtml += `
+                    <tr id="tr${lote.id}">
+                        <td>${cont}</td>
+                        <td id="td_codigo${lote.id}">${lote.codigo}</td>
+                        <td id="td_fecha${lote.id}">${fecha_vencimiento}</td>
+                                <td id="td_producto${lote.id}">
+                                    <a href="/productos/${lote.producto.id}/" target="blank">
+                                        ${lote.producto.id} -
+                                        ${lote.producto.nombre} -
+                                        ${lote.producto.marca.nombre} -
+                                        ${lote.producto.presentacion.nombre} -
+                                        ${lote.producto.presentacion.descripcion}
+                                    </a>
+                                </td>
+                        <td id="td_cantidad${lote.id}">${lote.cantidad_comprada}</td>
+                        <td id="td_costo_unitario${lote.id}">Q${lote.costo_unitario}</td>
+                        <td id="td_subtotal${lote.id}">Q${lote.subtotal}</td>
+                        <td>
+                            <i class="mdi mdi-eye-outline mr-3 adminonly" data-toggle="modal" data-target="#modal"
+                                onclick="LoteDetalle(${lote.id})">
+                            </i>
+                            <i class="mdi mdi-trash-can"
+                                onclick="LoteEliminar(${lote.id})">
+                            </i>
+                        </td>
+                    </tr>
+                `
+            }
+            $('#detalle-compra-t-body').html(comrpasHtml)
+            $('#compra_proveedor').val(data.proveedor.id)
+            $('#compra_observaciones').val(data.observaciones)
+            $(".select-2").select2({
+                theme: "bootstrap",
+                width: 'auto',
+                dropdownAutoWidth: true
+            });
+            $('#total').html('Total de la compra: Q'+Number(data.total).toFixed(2))
+            total = Number(data.total)
+            InitDataTable()
+            OcultarLoader()
+        } catch (err) {
+            OcultarLoader()
+            showAlert('error-message', {
+                title: 'No se pudieron cargar los lotes de la compra, intente mas tarde'
+            })
+        }
+    }
+
+    const RecalcularTotal = () => {
+        total = 0
+        for (lote of lotes) {
+            if (lotesEliminar.indexOf(lote.id) < 0) {
+                total += Number(lote.subtotal)
+            }
+        }
+        return Number(total).toFixed(2)
+    }
+
+    const GuardarCambios = async () => {
+        const compra_proveedor =  $('#compra_proveedor').val()
+        if (!compra_proveedor) {
+            showDangerToast('Seleccione un proveedor de la compra')
+            return
+        }
+        showAlert('warning-message-and-cancel', {
+            title: 'Guardar Cambios',
+            text: 'Esta seguro que desea guardar los cambios en la compra?'
+        })
+        $('.swal-button--confirm').on('click', async () => {
+            try {
+                for (lote of lotes) {
+                    if (lotesEditar.indexOf(lote.id) > -1){
+                        await axios.patch(`lotes/${lote.id}/`, {
+                            fecha_vencimiento: lote.fecha_vencimiento,
+                            descripcion: lote.descripcion,
+                            cantidad_comprada: lote.cantidad_comprada,
+                            costo_unitario: lote.costo_unitario,
+                            subtotal: lote.subtotal,
+                            producto: lote.producto
+                        })
+                    }
+                    if (lotesEliminar.indexOf(lote.id) > -1){
+                        await axios.patch(`lotes/${lote.id}/`, {estado: 2})
+                    }
+                }
+                const response = await axios.patch(`compras/update/${getUrlParameter()}/`, {
+                    proveedor: compra_proveedor,
+                    total: total,
+                    observaciones: $('#compra_observaciones').val()
+                })
+                if (response.status === 200) {
+                    showAlert('success-message', {title: 'Cambios guardados exitosamente'})
+                }
+                $('.btn-success-confirm').on('click', function () {
+                    window.location.href = '/compras/'
+                })
+            } catch (err) {
+                showAlert('error-message', {title: 'No se pudieron guardar los cambios, intente nuevamente'})
+            }
+        })
+
+    }
+
+    ( async () => {
+/*        window.onbeforeunload = function() {
+            if (true) {
+                return "Do you really want to leave our brilliant application?";
+            } else {
+                return;
+            }
+        }
+*/
+        await getProveedores()
+        await getDetalleCompra()
+    })()
+</script>
+{% endblock %}

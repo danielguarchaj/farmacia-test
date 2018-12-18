@@ -1,0 +1,50 @@
+<!-- partial:partials/_navbar.html -->
+<nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+    <div class="navbar-menu-wrapper d-flex align-items-stretch justify-content-between">
+        <ul class="navbar-nav mr-lg-2 d-none d-lg-flex">
+        <li class="nav-item nav-toggler-item">
+            <button class="navbar-toggler align-self-center" type="button" data-toggle="minimize">
+            <span class="mdi mdi-menu"></span>
+            </button>
+        </li>
+        </ul>
+        <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
+        <a class="navbar-brand brand-logo" href="{% url 'frontend:dashboard' %}"><h3 style="color:#5e2572;">farmaciaEdna</h3></a>
+        <a class="navbar-brand brand-logo-mini" style="margin-left: 200px" href="{% url 'frontend:dashboard' %}"><h1 style="color:#5e2572;">farmaciaEdna</h1></a>
+        </div>
+        <ul class="navbar-nav navbar-nav-right">
+        
+
+        <li class="nav-item dropdown btn-venta-nueva">
+            <a class="btn btn-block btn-primary btn-lg" id="nueva-venta-btn" href="{% url 'frontend:venta_crear' %}">
+              <i class="mdi mdi-cart-plus"></i> Nueva Venta
+            </a>
+        </li>
+
+
+        <li class="nav-item nav-profile dropdown">
+            <div class="dot-opacity-loader">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>          
+            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
+                <span class="nav-profile-name">
+                </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{% url 'frontend:logout' %}" onclick="localStorage.removeItem('user')">
+                    <i class="mdi mdi-logout text-primary"></i>
+                    Cerrar Sesion
+                </a>
+            </div>
+        </li>
+        <li class="nav-item nav-toggler-item-right d-lg-none">
+            <button class="navbar-toggler align-self-center" type="button" data-toggle="offcanvas">
+            <span class="mdi mdi-menu"></span>
+            </button>
+        </li>
+        </ul>
+    </div>
+</nav>

@@ -1,0 +1,79 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{% static 'global/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/addons.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/style.css' %}">
+    <title>Login</title>
+    <style>
+        body {
+            background-color: #d7d7d7;
+        }
+    </style>
+</head>
+
+<body>
+  <div class="container-scroller">
+    <div class="container-fluid page-body-wrapper full-page-wrapper">
+      <div class="content-wrapper d-flex align-items-center auth">
+        <div class="row w-100">
+          <div class="col-lg-4 mx-auto">
+            <div class="auth-form-light text-left p-5">
+              <div class="brand-logo">
+                <h3 style="color:#5e2572;">farmaciaEdna</h3>
+              </div>
+                <hr>
+              <h4>Bienvenido</h4>
+              <h6 class="font-weight-light">Inicia sesión para continuar</h6>
+              <form method="POST" action="" class="pt-3">
+                {% csrf_token %}
+                <div class="form-group">
+                  <input type="text" class="form-control form-control-lg" name="username" placeholder="Usuario">
+                </div>
+                <div class="form-group">
+                  <input type="password" class="form-control form-control-lg" name="password" placeholder="Password">
+                </div>
+                <div class="mt-3">
+                {% if form.errors %}
+                  <hr>
+                  <p class="text-danger label label-danger">
+                    <b>El nombre de usuario o la contraseña son incorrectos</b>
+                    <b>Intente nuevamente</b>
+                  </p>
+                  <hr>
+                {% endif %}
+                <button type="submit" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
+                      INICIAR SESION
+                </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- content-wrapper ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+  </div>
+  <!-- container-scroller -->
+  <!-- plugins:js -->
+    <script src="{% static 'global/plugins/js/axios.min.js' %} "></script>
+    <script src="{% static 'global/js/base.js' %}"></script>
+    <script src="{% static 'global/js/addons.js' %}"></script>
+    <script src="{% static 'global/js/axios.js' %}"></script>
+  <!-- endinject -->
+</body>
+
+<script>
+
+
+
+</script>
+
+</html>

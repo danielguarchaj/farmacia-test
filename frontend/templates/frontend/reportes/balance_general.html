@@ -1,0 +1,92 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Balance General
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card px-2">
+                            <div class="card-body">
+                                <div class="container-fluid">
+                                <h3 class="text-right my-5">Balance general: Farmacia Edna</h3>
+                                <hr>
+                                </div>
+                                <div class="container-fluid mt-5 d-flex justify-content-center w-100">
+                                <div class="table-responsive w-100">
+                                    <table class="table">
+                                        <thead>
+                                            <tr class="bg-dark text-black">
+                                                <th>Descripcion</th>
+                                                <th class="text-right">Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>(+) Ingresos por ventas</td>
+                                                <td class='text-right' id="balance_ventas" style="color:green"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>(+) Ingresos por consultas</td>
+                                                <td class='text-right' id="balance_consultas" style="color:green"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>(+) Ingresos de efectivo</td>
+                                                <td class='text-right' id="balance_creditos" style="color:green"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>(-) Egresos por compras</td>
+                                                <td class='text-right' id="balance_compras" style="color:red"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>(-) Egresos de efectivo</td>
+                                                <td class='text-right' id="balance_debitos" style="color:red"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>=</td>
+                                            </tr>    
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                </div>
+                                <div class="container-fluid mt-5 w-100">
+                                    <h4 class="text-right mb-5" id="balance_general"></h4>
+                                <hr>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script src="{% static 'global/js/reportes/script.js' %}"></script>
+<script src="{% static 'global/js/reportes/reportes_script.js' %}"></script>
+<script>
+    ( async () => {
+        await getBalanceGeneral()
+    }) ()
+</script>
+{% endblock %}

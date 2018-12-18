@@ -1,0 +1,154 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+    Reporte de productos
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Reporte de lotes</h1>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Listado general de lotes</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover data-table loader-await">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Codigo Lote</th>
+                                                    <th>Producto</th>
+                                                    <th>Fecha Vencimiento</th>
+                                                    <th>Estado</th>
+                                                    <th>Existencia</th>
+                                                    <th>Costo unitario</th>
+                                                    <th>Unidades Vendidas</th>
+                                                    <th>Ventas En Q</th>
+                                                    <th>Promedio de ganancia en por unidad</th>
+                                                    <th>% de ganancias</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id='lotes-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script src="{% static 'global/js/reportes/script.js' %}"></script>
+<script>
+    let det 
+    const getDetalleVentas = async () => {
+        try {
+            MostrarLoader()
+            const {data} = await axios.get(`reportes/lotes/`)
+
+                let lotesHtml = ''
+                let cont = 0
+                let totalExistencias = 0
+                for (lote of data){
+                    let unidadesVendidas = 0
+                    let totalVentasLote = 0
+
+                    for (detalleVenta of lote.detalle_venta) {
+                        unidadesVendidas += detalleVenta.cantidad
+                        totalVentasLote += Number(detalleVenta.subtotal)
+                    }
+
+                    let ganancia = (totalVentasLote - (unidadesVendidas * Number(lote.costo_unitario))) / unidadesVendidas
+                    let porcentaje = (ganancia / Number(lote.costo_unitario)) * 100
+
+                    let fecha = 'N/A'
+                    let estado = 'N/A'
+                    if (lote.fecha_vencimiento) {
+                        fecha = moment(lote.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y')
+                        let fechaVencimiento = moment(lote.fecha_vencimiento, "Y-MM-DD")
+                        let fechaHoy = moment(new Date())
+                        var diff = (fechaVencimiento - fechaHoy) / (1000*60*60*24)
+                        if ( diff > 30){
+                            estado = '<div class="badge badge-success">Vence en mas de 30 días</div>'
+                        }else if (diff > 0) {
+                            estado = '<div class="badge badge-warning">Vence en : ' + diff.toFixed(0) + ' días </div>'
+                        }else {
+                            estado = '<div class="badge badge-danger">Lote Vencido</div>'
+                        }
+                    }
+                    const existenciasLote = await getExistenciaActual(lote.id, lote.cantidad_comprada)
+                    totalExistencias += existenciasLote
+
+                    let producto = ''
+                    if (lote.producto.nombre) producto += lote.producto.nombre + ' - '
+                    if (lote.producto.presentacion.nombre) producto += lote.producto.presentacion.nombre + ' - '
+                    producto += 'Q' + lote.producto.precio_venta
+
+                    lotesHtml +=
+                    `
+                        <tr id="tr${lote.id}">
+                            <td>${++cont}</td>
+                            <td>${lote.codigo}</td>
+                            <td>
+                                <a href="/productos/${lote.producto.id}/" target="blank">${producto}</a>
+                            </td>
+                            <td>${fecha}</td>
+                            <td>${estado}</td>
+                            <td id="td_existencias_${lote.id}">${existenciasLote}</td>
+                            <td id="td_costo_unitario_${lote.id}">Q${Number(lote.costo_unitario).toFixed(2)}</td>
+                            <td id="td_unidades_vendidas_${lote.id}">${unidadesVendidas}</td>
+                            <td id="td_ventas_en_Q_${lote.id}">Q${totalVentasLote.toFixed(2)}</td>
+                            <td id="td_ganancia_${lote.id}">Q${ganancia.toFixed(2)}</td>
+                            <td id="td_porcentaje_${lote.id}">%${porcentaje.toFixed(2)}</td>
+                        </tr>
+                    `                    
+                }
+
+                $('#lotes-t-body').html(lotesHtml)
+                InitDataTable()
+
+            OcultarLoader()
+        } catch (err) {
+            OcultarLoader()
+            showAlert('error-message', {
+                title: 'No se pudo cargar el reporte de productos, intente mas tarde'
+            })
+            console.log(err)
+        }
+    }
+
+
+
+    ( async () => {
+        MostrarLoader()
+        await getDetalleVentas()
+        await ValidarPermisos()
+    }) ()
+</script>
+{% endblock %}

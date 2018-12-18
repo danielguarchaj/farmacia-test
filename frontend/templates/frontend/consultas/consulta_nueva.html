@@ -1,0 +1,270 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Consultas
+{% endblock  %}
+
+{% block style %}
+    <style>
+    </style>
+{% endblock%}
+
+{% block content %}
+    <div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-consulta">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Consulta Nueva</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Nueva Consulta</h4>
+                            <form class="form-sample">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="col-form-label">Paciente</label>
+                                            <select class="select-2" id="consulta_paciente">
+                                            </select>
+                                            <button type="button" class="btn btn-outline-primary btn-fw mt-3"
+                                                    onclick="CrearPacienteForm('refresh')" data-toggle="modal" data-target="#modal">
+                                                Crear Paciente
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="card-description">
+                                    Signos vitales
+                                </p>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-md-6">
+                                        <label class="">Presion Arterial</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_presion_arterial"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'fraction')"/>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="">Latidos por minuto (lpm)</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_lpm" 
+                                        onkeypress="return ValidarTeclaEnInput(event, 'int')"/>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-md-6">
+                                        <label>Temperatura</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_temperatura" 
+                                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Nivel de Azucar</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_azucar"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 row">
+                                    <div class="form-group col-md-6">
+                                        <label>Peso (libras)</label>
+                                            <input type="text" class="form-control input-consulta" id="consulta_peso"
+                                            onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Costo</label>
+                                        <input type="text" class="form-control input-consulta" id="consulta_costo"
+                                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')"/>
+                                    </div>
+                                </div>                                       
+                            </form>
+                            <button type="button" class="btn btn-outline-warning btn-fw" onclick="LimpiarCampos('.input-consulta')">
+                                Limpiar Campos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin" id="div_diagnostico">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Diagnostico</h4>
+                            <form class="form-sample">
+                                <div class="col-sm-12 row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Enfermedades</label>
+                                            <textarea class="form-control input-diagnostico" id="diagnostico_enfermedades" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Anotaciones</label>
+                                            <textarea class="form-control input-diagnostico" id="diagnostico_anotaciones" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                </div>                                                
+                            </form>
+                            <button type="button" class="btn btn-outline-warning btn-fw" onclick="LimpiarCampos('.input-diagnostico')">
+                                Limpiar Campos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin" id="div_tratamiento">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Tratamiento</h4>
+                            <form class="form-sample">
+                                <div class="col-sm-12 row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Medicamentos</label>
+                                            <textarea class="form-control input-tratamiento" id="tratamiento_medicamentos" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Anotaciones</label>
+                                            <textarea class="form-control input-tratamiento" id="tratamiento_anotaciones" rows="5"></textarea>
+                                        </div>
+                                    </div>
+                                </div>                                                
+                            </form>
+                            <button type="button" class="btn btn-outline-warning btn-fw" onclick="LimpiarCampos('.input-tratamiento')">
+                                Limpiar Campos
+                            </button>                       
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-menu">
+                    <div class="card">
+                        <div class="card-body">
+                            <button type="button" class="btn btn-outline-success btn-fw"
+                                    onclick="GuardarConsulta()">
+                                Guardar Consulta
+                            </button>
+                            <a class="btn btn-outline-danger btn-fw" href="{% url 'frontend:consultas' %}">
+                                Regresar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+{% include 'global/components/modal.html' %}
+{% endblock  %}
+
+
+{% block js %}
+<script src="{% static 'global/js/consultas/script.js' %}"></script>
+<script>
+
+    function GuardarConsulta() {
+        var consulta_paciente = $('#consulta_paciente').val()
+        var consulta_presion_arterial = $('#consulta_presion_arterial').val()
+        var consulta_lpm = $('#consulta_lpm').val()
+        var consulta_temperatura = $('#consulta_temperatura').val()
+        var consulta_azucar = $('#consulta_azucar').val()
+        var consulta_peso = $('#consulta_peso').val()
+        var consulta_costo = $('#consulta_costo').val()
+        var diagnostico_enfermedades = $('#diagnostico_enfermedades').val()
+        var diagnostico_anotaciones = $('#diagnostico_anotaciones').val()
+        var tratamiento_medicamentos = $('#tratamiento_medicamentos').val()
+        var tratamiento_anotaciones = $('#tratamiento_anotaciones').val()
+
+        var errors = false
+        if ( !ValidarContenidoInput(consulta_presion_arterial, 'fraction3/3') &&
+                consulta_presion_arterial != ''){
+            errors = true
+            showDangerToast('El formato de la presion arterial es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_temperatura, 'float82') &&
+                consulta_temperatura != ''){
+            errors = true
+            showDangerToast('El formato de la temperatura es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_azucar, 'float82') &&
+                consulta_azucar != ''){
+            errors = true
+            showDangerToast('El formato del nivel de azucar es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_peso, 'float82') &&
+                consulta_peso != ''){
+            errors = true
+            showDangerToast('El formato del peso es incorrecto')
+        }
+        if ( !ValidarContenidoInput(consulta_costo, 'float82') || consulta_costo == ''){
+            errors = true
+            showDangerToast('El formato del costo es incorrecto')
+        }
+        if (!consulta_paciente) {
+            errors = true
+            showDangerToast('Seleccione al paciente')
+        }
+
+        if (errors) return
+
+        var data = {
+            paciente: consulta_paciente,
+            presion_arterial: consulta_presion_arterial,
+            latidos_minuto: Number(consulta_lpm),
+            temperatura: Number(consulta_temperatura).toFixed(2),
+            costo: Number(consulta_costo).toFixed(2),
+            diagnostico_enfermedades: diagnostico_enfermedades,
+            diagnostico_anotaciones: diagnostico_anotaciones,
+            tratamiento_medicamentos: tratamiento_medicamentos,
+            tratamiento_anotaciones: tratamiento_anotaciones
+        }
+
+        if (consulta_azucar == '') {
+            data.nivel_azucar = 0.00
+        }else{
+            data.nivel_azucar = Number(consulta_azucar).toFixed(2)
+        }
+
+        if (consulta_peso == '') {
+            data.peso = 0.00
+        }else{
+            data.peso = Number(consulta_peso).toFixed(2)
+        }
+
+        showAlert('warning-message-and-cancel', {
+            title: 'Crear Consulta',
+            text: 'Esta seguro que quiere guardar la consulta?'
+        })
+
+        $('.swal-button--confirm').on('click', async function() {            
+            try {
+                MostrarLoader()
+                const response = await axios.post('consulta-create/', data)
+                if (response.status === 201) {
+                    OcultarLoader()
+                    showAlert('success-message', {
+                        title: 'Consulta creada con exito'
+                    })
+                    $('.btn-success-confirm').on('click', function () {
+                        location.reload()
+                    })
+                }
+            } catch (err) {
+                OcultarLoader()
+                showAlert('error-message', {title: 'No se pudo crear la consulta, intente mas tarde'})
+            }
+        })
+
+    }
+
+    ( async () => {
+        await populatePacientesSelect()
+        await ValidarPermisos()
+    })()
+    
+</script>
+{% endblock  %}

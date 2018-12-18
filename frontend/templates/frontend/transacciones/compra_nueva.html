@@ -1,0 +1,423 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Compra Nueva
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-compras">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Compra Nueva</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-12">
+                                    <label>Proveedor</label>
+                                    <select class="select-2" id="compra_proveedor"></select>
+                                    <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="crearProveedorForm('refresh')"
+                                            data-toggle="modal" data-target="#modal">
+                                        Crear Proveedor
+                                    </button>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label>Anotaciones</label>
+                                    <textarea class="form-control" id="compra_observaciones"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Detalle del lote a comprar</h4>
+                            <form class="form-sample">
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-sm-12">
+                                        <label>Producto</label>
+                                        <select class="select-2 select-limpiable" id="lote_producto"></select>
+                                        <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="CrearProductoForm()"
+                                                data-toggle="modal" data-target="#modal">
+                                            Crear Producto
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-sm-12">
+                                        <label>Anotaciones</label>
+                                        <textarea class="form-control input-limpiable" id="lote_observaciones"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 row">
+                                    <div class="form-group col-sm-3 mt-2">
+                                        <label for="lote_producto_vencimiento" class="mb-3">Fecha de vencimiento</label>
+                                        <div id="" class="input-group date datepicker datepicker-popup">
+                                            <input type="text" class="form-control input-limpiable" id="lote_producto_vencimiento"
+                                                    onkeypress="return ValidarTeclaEnInput(event, 'datepicker')">
+                                            <span class="input-group-addon input-group-append border-left">
+                                                <span class="mdi mdi-calendar input-group-text"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-sm-3 mt-2">
+                                        <label class="mb-3">Cantidad a comprar</label>
+                                        <input class="form-control input-limpiable" id="lote_cantidad"
+                                                onkeypress="return ValidarTeclaEnInput(event, 'int')">
+                                    </div>
+                                    <div class="form-group col-sm-3">
+                                        <div class="form-check">
+                                            <label class="form-check-label">
+                                            <input type="radio" class="form-check-input" name="optionsRadios" id="radioCostoUnitario" value="0" checked
+                                                    onclick="ToggleRadio()">
+                                            Costo Unitario
+                                            <i class="input-helper"></i></label>
+                                            <input class="form-control input-limpiable" id="lote_costo_unitario"
+                                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-sm-3">
+                                        <div class="form-check">
+                                            <label class="form-check-label">
+                                            <input type="radio" class="form-check-input" name="optionsRadios" id="radioSubtotal" value="1"
+                                                    onclick="ToggleRadio()">
+                                            Subtotal
+                                            <i class="input-helper"></i></label>
+                                            <input class="form-control input-limpiable" id="lote_subtotal"
+                                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')" disabled>
+                                        </div>
+                                    </div>
+                                    {% comment %} <div class="form-group col-sm-4">
+                                        <label>Subtotal</label>
+                                        <input class="form-control input-limpiable" id="lote_subtotal"
+                                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                                    </div> {% endcomment %}
+                                </div>
+                            </form>
+                            <button type="button" class="btn btn-outline-warning btn-fw" onclick="LimpiarCampos()">
+                                Limpiar Campos
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-fw" onclick="AgregarProducto()">
+                                Agregar producto
+                            </button>
+                            <a class="btn btn-outline-danger btn-fw" href="{% url 'frontend:compras' %}">
+                                Regresar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Detalle de la compra</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Producto</th>
+                                                    <th>Fecha de vencimiento</th>
+                                                    <th>Observaciones</th>
+                                                    <th>Cantidad a comprar</th>
+                                                    <th>Precio unitario</th>
+                                                    <th>Subtotal</th>
+                                                    <th>Opciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id='detalle-compra-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 id="total"></h3>
+                            <button type="button" class="btn btn-outline-success btn-fw" onclick="GuardarCompra()">
+                                Guardar Compra
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% include 'global/components/modal.html' %}
+{% include 'global/components/sub_modal.html' %}
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script src="{% static 'global/js/productos/script.js' %}"></script>
+<script src="{% static 'global/js/proveedores/script.js' %}"></script>
+<script>
+    let cont_lotes = 0
+    let total = 0
+    let detalle = []
+ 
+    const ToggleRadio  = () => {
+        const radioSelected = $('input[name=optionsRadios]:checked').val()
+        if (radioSelected === '0') {
+            $('#lote_costo_unitario').prop('disabled', false)
+            $('#lote_subtotal').prop('disabled', true)
+            $('#lote_subtotal').val('')
+        }else{
+            $('#lote_subtotal').prop('disabled', false)
+            $('#lote_costo_unitario').prop('disabled', true)
+            $('#lote_costo_unitario').val('')
+        }
+    }
+
+    const CrearProductoForm = async () => {
+        const formHtml = `
+            <form class="form-sample">
+                <div class="col-sm-12 row">
+                    <div class="form-group col-sm-12">
+                        <label for="producto_nombre">Nombre</label>
+                        <input type="text" class="form-control input-limpiable" id="producto_nombre" placeholder="Nombre">
+                    </div>
+                </div>
+                <div class="col-sm-12 row">
+                    <div class="form-group col-sm-6">
+                        <label>Marca</label>
+                        <select class="select-2 select-2-modal select-limpiable" id="producto_marca"></select>
+                        <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="CrearMarcaForm()"
+                                data-toggle="modal" data-target="#sub-modal">
+                            Crear Marca
+                        </button>
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label>Presentacion</label>
+                        <select class="select-2 select-2-modal select-limpiable" id="producto_presentacion"></select>
+                        <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="CrearPresentacionForm()"
+                                data-toggle="modal" data-target="#sub-modal">
+                            Crear Presentacion
+                        </button>
+                    </div>
+                </div>
+                <div class="col-sm-12 row">
+                    <div class="form-group col-sm-6">
+                        <label for="producto_minimo_permitido">Minimo Permitido</label>
+                        <input type="text" class="form-control input-limpiable" id="producto_minimo_permitido" placeholder="Minimo Permitido"
+                        onkeypress="return ValidarTeclaEnInput(event, 'int')">
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label for="producto_precio_venta">Precio de venta</label>
+                        <input type="text" class="form-control input-limpiable" id="producto_precio_venta" placeholder="Precio de venta"
+                        onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                    </div>
+                </div>
+                <div class="col-sm-12 row">
+                    <div class="form-group col-sm-6">
+                        <label for="producto_referencia_ubicacion">Referencia de ubicacion</label>
+                        <input type="text" class="form-control input-limpiable" id="producto_referencia_ubicacion" placeholder="Referencia de ubicacion">
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label>Categoria</label>
+                        <select class="select-2 select-2-modal select-limpiable" id="producto_categoria"></select>
+                        <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="CrearCategoriaForm()"
+                                data-toggle="modal" data-target="#sub-modal">
+                            Crear Categoria
+                        </button>
+                    </div>
+                </div>
+            </form>
+        `
+        const footerHtml = `
+            <button type="button" class="btn btn-info btn-rounded btn-fw" onclick="CrearProducto('refresh')">Crear Producto</button>
+            <button type="button" class="btn btn-light btn-rounded btn-fw" data-dismiss="modal">Cancelar</button>
+        `
+        ShowModal('modal', 'Crear Nuevo Producto', formHtml, footerHtml, 'modal-lg')
+
+        await getMarcas()
+        await getPresentaciones()
+        await getCategorias()
+        $(".select-2-modal").select2({
+            theme: "bootstrap",
+            width: 'auto',
+            dropdownAutoWidth: true,
+            dropdownParent: $('#modal')
+        })
+    }
+
+    const AgregarProducto = async () => {
+        cont_lotes++
+        const lote_producto = $('#lote_producto').val()
+        let lote_observaciones = $('#lote_observaciones').val()
+        if (!lote_observaciones) lote_observaciones = ''
+        const lote_cantidad = $('#lote_cantidad').val()
+        let lote_producto_vencimiento = $('#lote_producto_vencimiento').val()
+        const lote_subtotal = $('#lote_subtotal').val()
+        const lote_costo_unitario = $('#lote_costo_unitario').val()
+        const radioSelected = $('input[name=optionsRadios]:checked').val()
+
+        if (!radioSelected) {
+            showAlert('error-message', {title: 'Seleccione una opcion de costo unitario o subtotal'})
+            return
+        }
+
+        /*for (lote of detalle){
+            if (lote.producto == lote_producto) {
+                showAlert('error-message', {title: 'El producto seleccionado ya ha sido agregado'})
+                return
+            }
+        }*/
+
+        errores = false
+        if (!lote_producto) {
+            showDangerToast('Seleccione el producto a agregar')
+            errores = true
+        }
+        if (lote_cantidad == '') {
+            showDangerToast('Ingrese la cantidad a comprar')
+            errores = true
+        }
+        if (lote_costo_unitario == '' && radioSelected === '0') {
+            showDangerToast('Ingrese el costo unitario del producto')
+            errores = true
+        }
+        if (lote_subtotal == '' && radioSelected === '1') {
+            showDangerToast('Ingrese el subtotal de la compra')
+            errores = true
+        }
+        if (!ValidarContenidoInput(lote_cantidad, 'int') && lote_cantidad != '') {
+            showDangerToast('El formato de la cantidad a comprar es incorrecto')
+            errores = true
+        }
+        if (!ValidarContenidoInput(lote_subtotal, 'float82') && lote_subtotal != '') {
+            showDangerToast('El formato del subtotal del lote es incorrecto')
+            errores = true
+        }
+        if (errores) return
+
+        let costo_unitario = 0
+        let subtotal = 0
+        if (radioSelected === '0') {
+            subtotal = (Number(lote_costo_unitario)*Number(lote_cantidad)).toFixed(2)
+            costo_unitario = lote_costo_unitario
+        } else if (radioSelected === '1'){
+            costo_unitario = (Number(lote_subtotal)/Number(lote_cantidad)).toFixed(2)
+            subtotal = lote_subtotal
+        }
+
+        if ( lote_producto_vencimiento == '') lote_producto_vencimiento = null
+        else lote_producto_vencimiento = moment(lote_producto_vencimiento, 'DD/MM/Y').format('Y-MM-DD')
+
+        try {
+            const {data} = await axios.get(`productos/${lote_producto}/`)
+            detalle.push({
+                fecha_vencimiento: lote_producto_vencimiento,
+                descripcion: lote_observaciones,
+                producto: lote_producto,
+                cantidad_comprada: lote_cantidad,
+                existencia_actual: lote_cantidad,
+                costo_unitario: costo_unitario,
+                subtotal: subtotal
+            })
+            total += Number(subtotal)
+            $('#total').html(`Total: Q${total.toFixed(2)}`)
+            $('#detalle-compra-t-body').append(`
+                <tr id="tr${cont_lotes}">
+                    <td>${cont_lotes}</td>
+                    <td>    
+                        ${data.id} - Y-MM-DD T H-m-s Z
+                        ${data.nombre} - 
+                        ${data.marca.nombre} - 
+                        ${data.presentacion.nombre} -
+                        ${data.presentacion.descripcion}
+                    </td>
+                    <td>${moment(lote_producto_vencimiento, 'Y-MM-DD').format('DD/MM/Y')}</td>
+                    <td>${lote_observaciones}</td>
+                    <td>${lote_cantidad}</td>
+                    <td>Q${costo_unitario}</td>
+                    <td>Q${subtotal}</td>
+                    <td>
+                        <button type="button" class="btn btn-inverse-primary btn-icon" onclick="RemoverLote(${cont_lotes}, ${data.id})">
+                            <i class="mdi mdi-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>      
+            `)
+            LimpiarCampos()
+        } catch (err) {
+            showAlert('error-message', {title: 'No se pudo agregar el producto seleccionado, intente nuevamente'})
+        }
+
+    }
+
+    const RemoverLote = (lote, productoId) => {
+        $('#tr'+lote).remove()
+        total = 0
+        for (lote in detalle) {
+            if (detalle[lote].producto == productoId) detalle.splice(lote, 1)
+        }
+        for (lote of detalle) {
+            total += Number(lote.subtotal)
+        }
+        $(`#total`).html(`Q${Number(total).toFixed(2)}`)
+    }
+
+    const GuardarCompra = async () => {
+        if (detalle.length == 0) {
+            showAlert('error-message', {title: 'Ingrese al menos un producto para comprar'})
+            return
+        }
+        
+        const compra_proveedor = $('#compra_proveedor').val()
+        const compra_observaciones = $('#compra_observaciones').val()
+
+        if (!compra_proveedor) {
+            showDangerToast('Seleccione al proveedor')
+            return
+        }
+        const compra = {
+            lotes: detalle,
+            total: Number(total).toFixed(2),
+            observaciones: compra_observaciones,
+            proveedor: compra_proveedor
+        }
+        try {
+            MostrarLoader()
+            const response = await axios.post('compras/create/', compra)
+            if (response.status === 201) {
+                OcultarLoader()
+                showAlert('success-message', {title: 'La compra ha sido guardada'})
+                $('.btn-success-confirm').on('click', function () {
+                    window.location.href = '/compras/'
+                })
+            }
+        }catch(err) {
+            OcultarLoader()
+            showAlert('error-message', {title: 'No se pudo guardar la compra, intente mas tarde'})
+        }
+
+    }
+
+    ( async () => {
+        await getProveedores()
+        await getProductosSelectCompras()
+        InitDatePickers()
+    })()
+</script>
+{% endblock %}

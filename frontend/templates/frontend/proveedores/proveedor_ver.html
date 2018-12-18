@@ -1,0 +1,380 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Detalle de Proveedor
+{% endblock  %}
+
+
+{% block content %}
+    <div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+        <!-- Content -->
+        <div class="container-fluid page-body-wrapper">
+            {% include 'global/components/sidebar.html' %}
+            <div class="main-panel">
+                {% include 'global/components/loader.html' %}
+                <div class="content-wrapper loader-await" id="content-proveedor">
+                    <div class="col-12 grid-margin">
+                        <h1 class="text-light bg-dark pl-1 display-1">Detalle del proveedor</h1>
+                        <div class="card">                            
+                            <div class="card-body">
+                                <p class="card-description mb-3">
+                                Detalle del proveedor
+                                </p>
+                                <form class="">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="proveedor_nombre">Nombre</label>
+                                                <input type="text" class="form-control" id="proveedor_nombre" placeholder="Nombre del proveedor">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="proveedor_telefono">Telefono</label>
+                                                <input type="text" class="form-control" id="proveedor_telefono" placeholder="Telefono">
+                                            </div>                            
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="proveedor_direccion">Direccion</label>
+                                                <input type="text" class="form-control" id="proveedor_direccion" placeholder="Direccion">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="proveedor_email">Email</label>
+                                                <input type="email" class="form-control" id="proveedor_email" placeholder="Email">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>                                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 grid-margin admin">
+                        <div class="card">
+                            <div class="card-body">
+                                <button type="button" class="btn btn-outline-info btn-fw adminonly"
+                                    id="btn_editar_proveedor">
+                                    Guardar Cambios
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-fw adminonly"
+                                    id="btn_eliminar_proveedor">
+                                    Eliminar
+                                </button>
+                                <a class="btn btn-outline-danger btn-fw" href="{% url 'frontend:proveedores' %}">Regresar</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 grid-margin">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Visitas del proveedor</h4>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="table-responsive">
+                                            <table class="table data-table table-hover">
+                                                <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Fecha</th>
+                                                    <th>Motivo</th>
+                                                    <th>Anotaciones</th>
+                                                    <th>Estado</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id='visitas-proveedores-t-body'>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                        
+                    </div>
+                    <div class="col-12 grid-margin admin">
+                        <div class="card">
+                            <div class="card-body">
+                                <button type="button" class="btn btn-outline-info btn-fw" data-toggle="modal" data-target="#modal-proveedor"
+                                    onclick="CrearVisita()">
+                                    Agregar Visita
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'global/components/footer.html' %}
+            </div>
+            <!-- main-panel ends -->
+        </div>
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    <div class="modal fade" id="modal-proveedor" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-proveedor-title"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-proveedor-body">
+                </div>
+                <div class="modal-footer" id="modal-proveedor-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock  %}
+
+
+{% block js %}
+    <script>
+
+        const getProveedorDetalle = async () => {
+
+            let proveedorId = getUrlParameter()
+
+            try {
+                const { data } = await axios.get(`proveedores/${proveedorId}/`)
+                $('#proveedor_nombre').val(data.nombre)
+                $('#proveedor_telefono').val(data.telefono)
+                $('#proveedor_direccion').val(data.direccion)
+                $('#proveedor_email').val(data.email)
+
+                let visitasHtml = ''
+                let cont = 0
+
+                for (visita of data.visitas) {
+                    cont++
+                    let fecha = moment(visita.fecha, "YYYY MM DD")
+                    let fechaHoy = moment(new Date()).format('YYYY MM DD')
+
+                    var fechaInicio = new Date(fecha).getTime()
+                    var fechaFin    = new Date(fechaHoy).getTime()
+                    var diff = (fechaInicio - fechaFin) / (1000*60*60*24)
+
+                    fecha = fecha.format('DD/MM/YYYY')
+                    let estado = ''
+
+                    if ( diff === 0) {
+                        estado = '<div class="badge badge-danger">Visita Hoy</div>'
+                    } else if ( diff > 0 ) {
+                        estado = '<div class="badge badge-warning">Visita Pendiente</div>'
+                    } else {
+                        if ( visita.estado != 3 ) await axios.patch(`visitas/${visita.id}/`, {estado: 3})
+                        estado = '<div class="badge badge-success">Visita Atendida</div>'
+                    }
+
+                    visitasHtml += `
+                        <tr>
+                            <td>${cont}</td>
+                            <td>${fecha}</td>
+                            <td>${visita.motivo}</td>
+                            <td>${visita.anotaciones}</td>
+                            <td>${estado}</td>
+                            <td>
+                                <i class="mdi mdi-trash-can adminonly" onclick="VisitaEliminar(${visita.id})"></i>
+                            </td>
+                        </tr>
+                    `
+                }
+                $('#visitas-proveedores-t-body').html(visitasHtml)
+                InitDataTable()
+            } catch (err) {
+                showAlert('error-message', {title: 'No se pudieron cargar los datos del proveedor'})
+            }
+
+            $('#btn_editar_proveedor').on('click', async () => {
+                const proveedor_nombre = $('#proveedor_nombre').val()
+                const proveedor_telefono = $('#proveedor_telefono').val()
+                const proveedor_direccion = $('#proveedor_direccion').val()
+                const proveedor_email = $('#proveedor_email').val()
+
+                if ( proveedor_nombre == '') {
+                    showDangerToast('El nombre del proveedor es requerido')
+                    return
+                }
+
+                const data = {
+                    nombre: proveedor_nombre,
+                    telefono: proveedor_telefono,
+                    direccion: proveedor_direccion,
+                    email: proveedor_email
+                }
+
+                showAlert('warning-message-and-cancel', {
+                    title: 'Editar Proveedor',
+                    text: 'Esta seguro que quiere guardar los cambios?'
+                })
+
+                $('.swal-button--confirm').on('click', async function() {            
+                    try {
+                        MostrarLoader()
+                        console.log(data)
+                        const response = await axios.patch(`proveedores/${proveedorId}/`, data)
+                        if (response.status === 200) {
+                            OcultarLoader()
+                            showAlert('success-message', {
+                                title: 'Proveedor editado con exito'
+                            })
+                            $('.btn-success-confirm').on('click', function () {
+                                location.reload()
+                            })
+                        }
+                    } catch (err) {
+                        OcultarLoader()
+                        showAlert('error-message', {title: 'No se pudieron editar los datos del proveedor, intente mas tarde'})
+                        console.log(err)
+                    }
+                })
+
+            })
+
+            $('#btn_eliminar_proveedor').on('click', async () => {
+                ProveedorEliminar(proveedorId)
+            })
+
+        }
+
+        const ProveedorEliminar = (proveedorId) => {
+            showAlert('warning-message-and-cancel', {
+                title: 'Eliminar Proveedor',
+                text: 'Esta seguro que desea eliminar al proveedor?'
+            })
+            $('.swal-button--confirm').on('click', async () => {
+                try {
+                    MostrarLoader()
+                    const response = await axios.patch(`proveedores/${proveedorId}/`, {estado: 2})
+                    showAlert('success-message', {
+                        title: 'Proveedor eliminado',
+                        button: {
+                            text: 'Continuar'
+                        }
+                    })
+                    OcultarLoader()
+                    $('.btn-success-confirm').on('click', () => {                        
+                        window.location.href = '/proveedores/'
+                    })
+                    
+                }catch (err) {
+                    OcultarLoader()
+                    showAlert('error-message', {title: 'No se pudo eliminar al proveedor, intente mas tarde'})
+                    console.log(err)
+                }
+            })
+        }
+
+        const CrearVisita = () => {
+            const bodyHtml = `
+                <p class="card-description mb-3">
+                Ingresa los datos del proveedor
+                </p>
+                <form class="">
+                    <label for="visita-fecha">Fecha</label>
+                    <div id="" class="input-group date datepicker datepicker-popup">
+                        <input type="text" class="form-control" id="visita_fecha">
+                        <span class="input-group-addon input-group-append border-left">
+                            <span class="mdi mdi-calendar input-group-text"></span>
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="visita_motivo">Motivo</label>
+                        <input type="text" class="form-control" id="visita_motivo" placeholder="Motivo">
+                    </div>
+                    <div class="form-group">
+                        <label for="visita_anotaciones">Anotaciones</label>
+                        <input type="text" class="form-control" id="visita_anotaciones" placeholder="Anotaciones">
+                    </div>
+                </form>
+            `
+            const footerHtml = `
+                <button type="button" class="btn btn-info btn-rounded btn-fw" id="btn_crear_visita">Crear</button>
+                <button type="button" class="btn btn-light btn-rounded btn-fw" data-dismiss="modal">Cancelar</button>
+            `
+            ShowModal('modal-proveedor', 'Crear Visita', bodyHtml, footerHtml)
+
+            InitDatePickers()
+
+            $('#btn_crear_visita').on('click', async () => {
+                const visita_fecha = $('#visita_fecha').val()
+                const visita_motivo = $('#visita_motivo').val()
+                const visita_anotaciones = $('#visita_anotaciones').val()
+
+                if ( visita_fecha == '') {
+                    showDangerToast('La fecha de visita es requerida')
+                    return
+                }
+
+                const data = {
+                    fecha: parseDateFormat(visita_fecha),
+                    motivo: visita_motivo,
+                    anotaciones: visita_anotaciones,
+                    proveedor: getUrlParameter()
+                }
+
+                showAlert('warning-message-and-cancel', {
+                    title: 'Crear Visita',
+                    text: 'Esta seguro que quiere crear la visita?'
+                })
+
+                $('.swal-button--confirm').on('click', async function() {            
+                    try {
+                        MostrarLoader()
+                        const response = await axios.post(`visitas/`, data)
+                        if (response.status === 201) {
+                            OcultarLoader()
+                            showAlert('success-message', {
+                                title: 'Visita creada con exito'
+                            })
+                            $('.btn-success-confirm').on('click', function () {
+                                location.reload()
+                            })
+                        }
+                    } catch (err) {
+                        OcultarLoader()
+                        showAlert('error-message', {title: 'No se pudo crear la visita, intente mas tarde'})
+                        console.log(err)
+                    }
+                })
+
+            })
+
+        }
+
+        const VisitaEliminar = async (visitaId) => {
+            showAlert('warning-message-and-cancel', {
+                title: 'Eliminar Visita',
+                text: 'Esta seguro que quiere eliminar la visita?'
+            })
+
+            $('.swal-button--confirm').on('click', async function() {            
+                try {
+                    MostrarLoader()
+                    const response = await axios.patch(`visitas/${visitaId}/`, {estado: 2})
+                    if (response.status === 200) {
+                        OcultarLoader()
+                        showAlert('success-message', {
+                            title: 'Visita eliminada con exito'
+                        })
+                        $('.btn-success-confirm').on('click', function () {
+                            location.reload()
+                        })
+                    }
+                } catch (err) {
+                    OcultarLoader()
+                    showAlert('error-message', {title: 'No se pudo eliminar la visita, intente mas tarde'})
+                }
+            })
+        }
+
+        ( async () => {
+            MostrarLoader()
+            await getProveedorDetalle()
+            await ValidarPermisos()
+            OcultarLoader()
+        }) ()
+
+    </script>
+{% endblock  %}

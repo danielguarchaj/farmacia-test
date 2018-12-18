@@ -1,0 +1,246 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Inicio
+{% endblock  %}
+
+
+{% block content %}
+  <div class="container-scroller"></div>
+    {% include 'global/components/navbar.html' %}
+
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+      <div class="main-panel">
+        <div class="content-wrapper loader-await">
+          <div class="row adminonly">
+            <div class="col-lg-12 grid-margin d-flex flex-column">
+              <div class="row">
+                <div class="col-md-3 grid-margin stretch-card">
+                  <div class="card">
+                    <div class="card-body text-center">
+                      <div class="text-primary mb-4">
+                        <i class="mdi mdi-account-heart mdi-36px"></i>
+                        <p class="font-weight-medium mt-2">Pacientes</p>
+                      </div>
+                      <h1 class="font-weight-light" id="pacientes_total"></h1>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3 grid-margin stretch-card">
+                  <div class="card">
+                    <div class="card-body text-center">
+                      <div class="text-danger mb-4">
+                        <i class="mdi mdi-pill mdi-36px"></i>
+                        <p class="font-weight-medium mt-2">Productos</p>
+                      </div>
+                      <h1 class="font-weight-light" id="productos_total"></h1>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3 grid-margin stretch-card">
+                  <div class="card">
+                    <div class="card-body text-center">
+                      <div class="text-success mb-4">
+                        <i class="mdi mdi-cash-100 mdi-36px"></i>
+                        <p class="font-weight-medium mt-2">Ventas Realizadas</p>
+                      </div>
+                      <h1 class="font-weight-light" id="ventas_realizadas"></h1>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3 grid-margin stretch-card">
+                  <div class="card">
+                    <div class="card-body text-center">
+                      <div class="text-info mb-4">
+                        <i class="mdi mdi-medical-bag mdi-36px"></i>
+                        <p class="font-weight-medium mt-2">Consultas Atendidas</p>
+                      </div>
+                      <h1 class="font-weight-light" id="consultas_atendidas"></h1>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row adminonly">
+              <div class="col-lg-12 grid-margin stretch-card">
+                <div class="card d-flex flex-column justify-content-between">
+                    <div class="card-body">
+                        <div class="table-responsive w-100">
+                            <h3 class="font-weight-light">Balance general: Farmacia Edna</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr class="bg-dark text-black">
+                                        <th>Descripcion</th>
+                                        <th class="text-right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-weight-light">(+) Ingresos por ventas</td>
+                                        <td class='font-weight-light text-right text-success' id="balance_ventas"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-light">(+) Ingresos por consultas</td>
+                                        <td class='font-weight-light text-right text-success' id="balance_consultas"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-light">(+) Ingresos de efectivo</td>
+                                        <td class='font-weight-light text-right text-success' id="balance_creditos"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-light">(-) Egresos por compras</td>
+                                        <td class='font-weight-light text-right text-danger' id="balance_compras"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-light">(-) Egresos de efectivo</td>
+                                        <td class='font-weight-light text-right text-danger' id="balance_debitos"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-light">Balance actual</td>
+                                        <td class='font-weight-light text-right' id="balance_general"></td>
+                                    </tr>    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+              </div>
+          </div>
+          <div class="row">
+              <div class="col-lg-12 grid-margin stretch-card">
+                <div class="card d-flex flex-column justify-content-between">
+                    <div class="card-body" id="div-ventas">
+                        <div class="table-responsive">
+                            <table class="table table-hover data-table">
+                                <h3 class="font-weight-light" id="ventas-total">Ventas del dia: Q00.00 </h3>
+                                <h5 class="font-weight-light vendedoronly" id="balance-actual">Balance actual : Q00.00</h5>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Fecha</th>
+                                        <th>Observaciones</th>
+                                        <th>Encargado</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id='ventas-t-body'>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+              </div>
+          </div>
+        </div>
+        {% include 'global/components/footer.html' %}
+      </div>
+      <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+  </div>
+  <!-- container-scroller -->
+{% endblock  %}
+
+
+
+{% block js %}
+<script src="{% static 'global/js/reportes/reportes_script.js' %}"></script>
+
+<script>
+
+  const getPacientesTotal = async () => {
+    const {data} = await axios.get('pacientes/')
+    $('#pacientes_total').html(data.length)
+  }
+
+  const getResumenProductos = async () => {
+    const {data} = await axios.get('productos-simple/')
+    $('#productos_total').html(data.length)
+  }
+
+  const getVentasRealizadas = async () => {
+    const {data} = await axios.get('ventas/')
+    $('#ventas_realizadas').html(data.length)
+  }
+
+  const getConsultasAtendidas = async () => {
+    const {data} = await axios.get('consultas/')
+    $('#consultas_atendidas').html(data.length)
+  }
+
+      const getVentas = async () => {
+        try {
+            MostrarLoader()
+            let hoy = moment(new Date()).format("Y-MM-DD")
+            hoy = moment(hoy)
+            const {data} = await axios.get(
+                        `reportes/ventas/${hoy.get('year')}/${hoy.get('month') + 1}/${hoy.get('date')}/${hoy.get('year')}/${hoy.get('month') + 1}/${hoy.get('date')}/`)
+            
+            if (!data[0]) {
+              $('#div-ventas').html(`<h3 class="font-weight-light text-info"><b>Aun no se ha realizado ninguna venta el dia de hoy</b></h3>`)
+            }
+            let cont = 0
+            let ventasHtml = ''
+            let total = 0
+            for(venta of data){
+                total += Number(venta.total)
+                ventasHtml += `
+                    <tr>
+                        <td class="front-weight-light">${++cont}</td>
+                        <td class="front-weight-light">${moment(venta.fecha_hora_creacion, 'Y-MM-DD T H-m-s Z').format('DD/MM/Y, h:mm:ss a')}</td>
+                        <td class="front-weight-light">${venta.observaciones}</td>
+                        <td class="front-weight-light">${venta.usuario.nombres} ${venta.usuario.apellidos}</td>
+                        <td class="front-weight-light">Q${venta.total}</td>
+                        <td class="front-weight-light">                            
+                            <a href="/ventas/${venta.id}/" target="_blank">
+                              <i class="mdi mdi-eye-outline mr-3"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `
+            }
+            ventasHtml += `
+            <tr>
+              <td class="front-weight-light">Total de ventas</td> 
+              <td></td>             
+              <td></td>
+              <td></td>
+              <td class="front-weight-light"><b>Q${total.toFixed(2)}</b></td>
+              <td></td>
+            </tr>
+            `
+            $('#ventas-t-body').html(ventasHtml)
+            $('#ventas-total').html(`Ventas del dia: Q${total.toFixed(2)}`)
+            OcultarLoader()
+        } catch (err) {
+            OcultarLoader()
+            showAlert('error-message', {
+                title: 'No se pudieron cargar las ventas, intente mas tarde'
+            })
+            console.log(err)
+        }
+    }
+
+  ( async () => {
+
+    MostrarLoader()
+    await getVentas()
+    await getPacientesTotal()
+    await getResumenProductos()
+    await getVentasRealizadas()
+    await getConsultasAtendidas()
+    await getBalanceGeneral()
+    await ValidarPermisos()
+    OcultarLoader()
+
+  })()
+
+</script>
+
+{% endblock  %}

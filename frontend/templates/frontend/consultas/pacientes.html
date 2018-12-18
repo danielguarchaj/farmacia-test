@@ -1,0 +1,136 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Pacientes
+{% endblock  %}
+
+
+{% block content %}
+    <div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+        <!-- Content -->
+        <div class="container-fluid page-body-wrapper">
+            {% include 'global/components/sidebar.html' %}
+            <div class="main-panel">
+                {% include 'global/components/loader.html' %}
+                <div class="content-wrapper loader-await" id="content-pacientes">
+                    <h1 class="text-light bg-dark pl-1 display-1">Mis Pacientes</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <button class="btn btn-outline-success btn-fw mb-3" onclick="CrearPacienteForm()" data-toggle="modal"
+                                data-target="#modal">
+                                Crear Paciente
+                            </button>
+                            <h4 class="card-title">Listado General de Pacientes</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table data-table">
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Nombres</th>
+                                                <th>Apellidos</th>
+                                                <th>Fecha de Nacimiento</th>
+                                                <th>Lugar de origen</th>
+                                                <th>Telefono</th>
+                                                <th>Opciones</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id='pacientes-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'global/components/footer.html' %}
+            </div>
+            <!-- main-panel ends -->
+        </div>
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    {% include 'global/components/modal.html' %}
+{% endblock  %}
+
+
+{% block js %}
+<script src="{% static 'global/js/consultas/script.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            MostrarLoader()
+            await getPacientes()
+            await ValidarPermisos()    
+            OcultarLoader()        
+        })
+        
+        const getPacientes = async () => {
+            try {
+                const { data } = await axios.get('pacientes/')
+                let pacientesHtml = ''
+                let cont = 0
+                for (paciente of data) {
+                    let fecha = ''
+                    if (!paciente.fecha_nacimiento) fecha = ''
+                    else fecha = moment(paciente.fecha_nacimiento, 'Y-MM-DD').format('DD/MM/Y')
+                    pacientesHtml += `
+                        <tr>
+                            <td>${++cont}</td>
+                            <td>${paciente.nombres}</td>
+                            <td>${paciente.apellidos}</td>
+                            <td>${fecha}</td>
+                            <td>${paciente.lugar_origen}</td>
+                            <td>${paciente.telefono}</td>
+                            <td>
+                                <i class="mdi mdi-eye-outline mr-3" onclick="PacienteDetalle(${paciente.id})"
+                                    data-toggle="modal" data-target="#modal">
+                                </i>
+                                <i class="mdi mdi-trash-can adminonly" onclick="PacienteEliminar(${paciente.id})">
+                                </i>                                
+                            </td>
+                        </tr>
+                    `
+                }
+                $('#pacientes-t-body').html(pacientesHtml)
+                InitDataTable()
+            }catch (err){
+                showAlert('error-message', {title: 'No se pudieron cargar los pacientes, intente mas tarde'})
+                console.log(err)
+            }
+        }
+
+        const PacienteEliminar = (pacienteId) => {
+            showAlert('warning-message-and-cancel', {
+                title: 'Eliminar Paciente',
+                text: 'Esta seguro que desea eliminar al paciente?'
+            })
+            $('.swal-button--confirm').on('click', async () => {
+                try {
+                    MostrarLoader()
+                    const response = await axios.patch(`pacientes/${pacienteId}/`, {estado: 2})
+                    showAlert('success-message', {
+                        title: 'Paciente eliminado',
+                        button: {
+                            text: 'Continuar'
+                        }
+                    })
+                    OcultarLoader()
+                    $('.btn-success-confirm').on('click', () => {                        
+                        location.reload()
+                    })
+                    
+                }catch (err) {
+                    showAlert('error-message', {
+                        title: 'No se pudo eliminar al paciente, intente nuevamente.',
+                    })
+                }
+            })
+        }
+
+    </script>
+{% endblock  %}

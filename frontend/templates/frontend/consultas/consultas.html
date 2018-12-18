@@ -1,0 +1,126 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Consultas
+{% endblock  %}
+
+
+{% block content %}
+    <div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+        <!-- Content -->
+        <div class="container-fluid page-body-wrapper">
+            {% include 'global/components/sidebar.html' %}
+            <div class="main-panel">
+                {% include 'global/components/loader.html' %}
+                <div class="content-wrapper loader-await" id="content-consulta">
+                    <h1 class="text-light bg-dark pl-1 display-1">Consultas</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Listado General de Consultas</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table data-table">
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Paciente</th>
+                                                <th>Diagnostico</th>
+                                                <th>Tratamiento</th>
+                                                <th>Costo</th>
+                                                <th>Fecha</th>
+                                                <th>Opciones</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id='consultas-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% include 'global/components/footer.html' %}
+            </div>
+            <!-- main-panel ends -->
+        </div>
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+{% endblock  %}
+
+
+{% block js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            MostrarLoader()
+            await getConsultas()
+            await ValidarPermisos()
+            OcultarLoader()
+        })
+        
+        const getConsultas = async () => {
+            try {
+                const { data } = await axios.get('consultas/')
+                
+                let consultasHtml = ''
+                let cont = 0
+                for (consulta of data) {
+                    cont++
+                    consultasHtml += `
+                        <tr>
+                            <td>${cont}</td>
+                            <td>${consulta.paciente.nombres} ${consulta.paciente.apellidos}</td>
+                            <td>${consulta.diagnostico_enfermedades}</td>
+                            <td>${consulta.tratamiento_medicamentos}</td>
+                            <td>Q${Number(consulta.costo).toFixed(2)}</td>
+                            <td>${moment(consulta.fecha, 'Y-MM-DD').format('DD/MM/Y')}</td>
+                            <td>
+                                <i class="mdi mdi-eye-outline mr-3" onclick="window.location.href='/consultas/${consulta.id}/'"></i>                                
+                                <i class="mdi mdi-trash-can adminonly" onclick="ConsultaEliminar(${consulta.id})"></i>
+                            </td>
+                        </tr>
+                    `
+                }
+                $('#consultas-t-body').html(consultasHtml)
+                InitDataTable()
+            }catch (err){
+                showAlert('error-message', {title: 'No se pudieron cargar las consultas, intente mas tarde'})
+                console.log(err)
+            }
+        }
+
+        const ConsultaEliminar = (consultaId) => {
+            showAlert('warning-message-and-cancel', {
+                title: 'Eliminar Consulta?',
+                text: 'Esta seguro que desea eliminar la consulta?'
+            })            
+            $('.swal-button--confirm').on('click', async () => {
+                try {
+                    MostrarLoader()
+                    const response = await axios.patch(`consulta-update/${consultaId}/`, {estado: 2})
+                    showAlert('success-message', {
+                        title: 'Consulta Eliminada',
+                        button: {
+                            text: 'Continuar'
+                        }
+                    })
+                    OcultarLoader()
+                    $('.btn-success-confirm').on('click', () => {                        
+                        location.reload()
+                    })
+                    
+                }catch (err) {
+                    OcultarLoader()
+                    showAlert('error-message', {title: 'No se pudo eliminar la consulta, intente mas tarde'})
+                    console.log(err)
+                }
+            })
+        }
+
+    </script>
+{% endblock  %}

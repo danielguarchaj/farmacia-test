@@ -1,0 +1,58 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  
+  <title>{% block title %}{% endblock  %}</title>
+
+  <link rel="shortcut icon" href="{% static 'media/images/favicon.ico' %}" type="image/x-icon">
+  <link rel="stylesheet" href="{% static 'global/mdi/css/materialdesignicons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'global/css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'global/css/addons.css' %}">
+  <link rel="stylesheet" href="{% static 'global/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'global/css/myStyles.css' %}">
+
+
+  {% block style %}{% endblock  %}
+</head>
+<body>
+
+    {% block content %}
+    <div class="jumbotron">
+        <div class="container">
+            <h1>Content By Default</h1>
+        </div>
+    </div>
+    {% endblock  %}
+    <script src="{% static 'global/plugins/js/axios.min.js' %} "></script>
+    <script src="{% static 'global/js/base.js' %}"></script>
+    <script src="{% static 'global/js/addons.js' %}"></script>
+    <script src="{% static 'global/js/helpers.js' %}"></script>
+    <script src="{% static 'global/js/validaciones.js' %}"></script>
+    <script src="{% static 'global/js/axios.js' %}"></script>
+    <script src="{% static 'global/plugins/js/off-canvas.js' %} "></script>
+    <script src="{% static 'global/plugins/js/hoverable-collapse.js' %}"></script>
+    <script src="{% static 'global/plugins/js/template.js' %}"></script>
+    <script src="{% static 'global/plugins/js/settings.js' %}"></script>
+    <script src="{% static 'global/plugins/js/todolist.js' %}"></script>
+    <script src="{% static 'global/plugins/js/dashboard.js' %}"></script>
+    <script src="{% static 'global/plugins/js/todolist.js' %}"></script>
+    <script src="{% static 'global/plugins/js/formpickers.js' %}"></script>
+    <script src="{% static 'global/plugins/js/toastDemo.js' %}"></script>
+    <script src="{% static 'global/plugins/js/alerts.js' %}"></script>
+    <script src="{% static 'global/plugins/js/data-table.js' %}"></script>
+    <script src="{% static 'global/plugins/js/moment.js' %}"></script>
+    <script src="{% static 'global/plugins/js/tooltips.js' %}"></script>
+    <script src="{% static 'global/plugins/js/chart.js' %}"></script>
+    <script>
+        ( async () => {
+            //await ValidarPermisos()
+        })()
+    </script>
+    {% block js %}{% endblock  %}
+</body>
+</html>

@@ -1,0 +1,18 @@
+
+
+.mdi{
+    cursor: pointer;
+}
+
+@media (max-width: 991px) {
+    .fixed-bottom {
+        display: none;
+    }
+    .btn-venta-nueva {
+        display: none;
+    }
+}
+
+.table td, .jsgrid .jsgrid-table td {
+    padding: 8px 10px;
+}

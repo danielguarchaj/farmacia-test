@@ -1,0 +1,223 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Reporte de ventas
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-compras">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Reporte de ventas</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-6">
+                                    <label for="fechaInicio">Desde</label>
+                                    <div class="input-group date datepicker datepicker-popup">
+                                        <input type="text" class="form-control" id="fechaInicio" onkeypress="return ValidarTeclaEnInput(event, 'datepicker')">
+                                        <span class="input-group-addon input-group-append border-left">
+                                            <span class="mdi mdi-calendar input-group-text"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="fechaFin">Hasta</label>
+                                    <div class="input-group date datepicker datepicker-popup">
+                                        <input type="text" class="form-control" id="fechaFin" onkeypress="return ValidarTeclaEnInput(event, 'datepicker')">
+                                        <span class="input-group-addon input-group-append border-left">
+                                            <span class="mdi mdi-calendar input-group-text"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <button class="btn btn-info mr-2" onclick="getReporteVentas()">Consultar</button>
+                                    <button class="btn btn-warning" onclick="LimpiarCampos()">Limpiar</button>                                        
+                                </div>
+                                <div class="form-group col-sm-12 row">
+                                    <div class="col-sm-6">
+                                        <hr>
+                                        <h5 id="total">Venta total : Q00.00</h5><hr>
+                                        <h5 id="ganancias">Ganancia total : Q00.00</h5><hr>
+                                        <h5 id="porcentaje">Margen de ganancia : %0</h5><hr>
+                                    </div>
+                                    <div class="col-sm-6" id="div-chart">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title" id="reporte-title">Reporte de ventas</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#Venta</th>
+                                                    <th>Fecha y Hora</th>
+                                                    <th>Observaciones</th>
+                                                    <th>Encargado</th>
+                                                    <th>Total</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id='reporte-ventas-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script src="{% static 'global/js/reportes/script.js' %}"></script>
+<script src="{% static 'global/js/reportes/reportes_script.js' %}"></script>
+<script>
+    let initialized = false
+
+    const getReporteVentas = async () => {
+        let fechaInicio = $('#fechaInicio').val()
+        let fechaFin = $('#fechaFin').val()
+        let errors = false
+        
+        fechaInicio = moment(fechaInicio, 'DD/MM/Y').format('Y-MM-DD')
+        fechaFin = moment(fechaFin, 'DD/MM/Y').format('Y-MM-DD')
+
+        if (fechaInicio === 'Invalid date'){
+            showDangerToast('Fecha de inicio invalida')
+            errors = true
+        }
+
+        if (fechaFin === 'Invalid date'){
+            showDangerToast('Fecha de fin invalida')
+            errors = true
+        }
+
+        if (errors) return
+
+        fechaInicio = moment(fechaInicio)
+        fechaFin = moment(fechaFin)
+
+        if (fechaInicio.diff(fechaFin) > 0) {
+            showDangerToast('La fecha de inicio no puede ser mayor a la fecha final')
+            return
+        }
+        try {
+            MostrarLoader()
+            const {data} = await axios.get(
+                        `reportes/ventas/${fechaInicio.get('year')}/${fechaInicio.get('month') + 1}/${fechaInicio.get('date')}/${fechaFin.get('year')}/${fechaFin.get('month') + 1}/${fechaFin.get('date')}/`)
+            
+            if (data.length == 0) {
+                showAlert('error-message', {title: 'No existen ventas registradas para el rango de fechas ingresado'})
+                OcultarLoader()
+                return
+            }
+
+            let total = 0
+            let ganancias = 0
+            let ventasHtml = ''
+            for(venta of data){
+                total += Number(venta.total)
+                ganancias += getGananciasDetalleVenta(venta.detalle_venta)
+                ventasHtml += `
+                    <tr>
+                        <td>${venta.id}</td>
+                        <td>${moment(venta.fecha_hora_creacion, 'Y-MM-DD T H-m-s Z').format('DD/MM/Y, h:mm a')}</td>
+                        <td>${venta.observaciones}</td>
+                        <td>${venta.usuario.nombres} ${venta.usuario.apellidos}</td>
+                        <td>Q${venta.total}</td>
+                        <td>
+                            <a class="btn btn-outline-primary" href="/ventas/${venta.id}/" target="_blank">
+                                <i class="mdi mdi-eye text-info"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `
+            }
+            $('#reporte-ventas-t-body').html(ventasHtml)
+            $('#total').html(`Venta total : Q${total.toFixed(2)}`)
+            $('#ganancias').html(`Ganancia total : Q${ganancias.toFixed(2)}`)
+            $('#porcentaje').html(`Margen de ganancia : %${((ganancias/total)*100).toFixed(2)}`)
+            var chartData = {
+                datasets: [{
+                    data: [total-ganancias, ganancias],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)'
+                            //'rgba(153, 102, 255, 0.5)',
+                            //'rgba(255, 159, 64, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255,99,132,1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                            //'rgba(153, 102, 255, 1)',
+                            //'rgba(255, 159, 64, 1)'
+                        ],
+                    }],
+                    // These labels appear in the legend and in the tooltips when hovering different arcs
+                    labels: [
+                        'Costos',
+                        'Ganancias',
+                    ]
+            };
+            $('#div-chart').html(`
+                <canvas id="ventas-chart" width="817" height="408" class="chartjs-render-monitor" style="display: block; width: 817px; height: 408px;">
+                </canvas>
+            `)
+            InitChart ('pie', chartData, '#ventas-chart')
+            if ( !initialized ) {
+                InitDataTable()
+                initialized = true
+            }
+
+            await ValidarPermisos()            
+
+            OcultarLoader()
+
+        } catch (err) {
+            console.log(err)
+            showAlert('error-message', {title: 'No se pudo obtener la consulta solicitada, intente nuevamente.'})
+            OcultarLoader()
+        }
+
+    }
+
+    ( async () => {
+        MostrarLoader()
+        await ValidarPermisos()
+        InitDatePickers()
+        OcultarLoader()
+    }) ()
+</script>
+{% endblock %}

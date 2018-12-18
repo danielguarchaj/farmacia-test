@@ -1,0 +1,116 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Ventas del dia
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="">
+                <div class="col-12 grid-margin">
+                    <h1 class="text-light bg-dark pl-1 display-1">Ventas del dia</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 id="total">Venta total : Q00.00</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 grid-margin">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Ventas del dia</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover data-table loader-await">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Fecha</th>
+                                                    <th>Observaciones</th>
+                                                    <th>Encargado</th>
+                                                    <th>Total</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id='ventas-t-body'>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+<script src="{% static 'global/js/reportes/script.js' %}"></script>
+<script>
+    const getVentas = async () => {
+        try {
+            MostrarLoader()
+            let hoy = moment(new Date()).format("Y-MM-DD")
+            hoy = moment(hoy)
+            const {data} = await axios.get(
+                        `reportes/ventas/${hoy.get('year')}/${hoy.get('month') + 1}/${hoy.get('date')}/${hoy.get('year')}/${hoy.get('month') + 1}/${hoy.get('date')}/`)
+            
+            if (!data[0]) showAlert('error-message', {
+                title: 'No se ha realizado ninguna venta el dia de hoy'
+            })
+            let cont = 0
+            let ventasHtml = ''
+            let total = 0
+            for(venta of data){
+                total += Number(venta.total)
+                ventasHtml += `
+                    <tr>
+                        <td>${++cont}</td>
+                        <td>${moment(venta.fecha_hora_creacion, 'Y-MM-DD T H-m-s Z').format('DD/MM/Y, h:mm:ss a')}</td>
+                        <td>${venta.observaciones}</td>
+                        <td>${venta.usuario.nombres} ${venta.usuario.apellidos}</td>
+                        <td>Q${venta.total}</td>
+                        <td>
+                            <i class="mdi mdi-eye-outline mr-3" onclick="window.location.href='/ventas/${venta.id}/'"></i>
+                            <i class="mdi mdi-trash-can adminonly" onclick="VentaEliminar(${venta.id})"></i>
+                        </td>
+                    </tr>
+                `
+            }
+            $('#ventas-t-body').html(ventasHtml)
+            $('#total').html(`Venta total : Q${total.toFixed(2)}`)
+            OcultarLoader()
+        } catch (err) {
+            OcultarLoader()
+            showAlert('error-message', {
+                title: 'No se pudieron cargar las ventas, intente mas tarde'
+            })
+            console.log(err)
+        }
+    }
+    ( async () => {
+        MostrarLoader()
+        await getVentas()
+        await ValidarPermisos()
+    }) ()
+</script>
+{% endblock %}

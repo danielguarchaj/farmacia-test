@@ -1,0 +1,141 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Productos
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-productos">
+            <div class="col-12 grid-margin">
+                <h1 class="text-light bg-dark pl-1 display-1">Mis Productos</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Crear Producto</h4>
+                        <form class="form-sample">
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-12">
+                                    <label for="producto_nombre">Nombre</label>
+                                    <input type="text" class="form-control input-limpiable" id="producto_nombre" placeholder="Nombre">
+                                </div>
+                            </div>
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-6">
+                                    <label>Marca</label>
+                                    <select class="select-2 select-limpiable" id="producto_marca"></select>
+                                    <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="CrearMarcaForm()"
+                                            data-toggle="modal" data-target="#sub-modal">
+                                        Crear Marca
+                                    </button>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label>Presentacion</label>
+                                    <select class="select-2 select-limpiable" id="producto_presentacion"></select>
+                                    <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="CrearPresentacionForm()"
+                                            data-toggle="modal" data-target="#sub-modal">
+                                        Crear Presentacion
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-6">
+                                    <label for="producto_minimo_permitido">Minimo Permitido</label>
+                                    <input type="text" class="form-control input-limpiable" id="producto_minimo_permitido" placeholder="Minimo Permitido"
+                                    onkeypress="return ValidarTeclaEnInput(event, 'int')">
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="producto_precio_venta">Precio de venta</label>
+                                    <input type="text" class="form-control input-limpiable" id="producto_precio_venta" placeholder="Precio de venta"
+                                    onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                                </div>
+                            </div>
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-6">
+                                    <label for="producto_referencia_ubicacion">Referencia de ubicacion</label>
+                                    <input type="text" class="form-control input-limpiable" id="producto_referencia_ubicacion" placeholder="Referencia de ubicacion">
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label>Categoria</label>
+                                    <select class="select-2 select-limpiable" id="producto_categoria"></select>
+                                    <button type="button" class="btn btn-outline-primary btn-fw mt-3" onclick="CrearCategoriaForm()"
+                                            data-toggle="modal" data-target="#sub-modal">
+                                        Crear Categoria
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <button type="button" class="btn btn-outline-warning btn-fw" onclick="LimpiarCampos()">
+                            Limpiar Campos
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-fw" onclick="CrearProducto()">
+                            Crear Producto
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 grid-margin">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Listado General de Productos</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="table-responsive">
+                                    <table class="table data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Nombre</th>
+                                                <th>Marca</th>
+                                                <th>Presentacion</th>
+                                                <th>Precio Venta</th>
+                                                <th>Minimo Permitido</th>
+                                                <th>Existencias</th>
+                                                <th>Estado</th>
+                                                <th>Opciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id='productos-t-body'>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% include 'global/components/sub_modal.html' %}
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/productos/script.js' %}"></script>
+
+<script>
+
+    ( async () => {
+        MostrarLoader()
+        await getProductos()
+        await ValidarPermisos()
+        await getMarcas()
+        await getPresentaciones()
+        await getCategorias()
+    })()
+</script>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Marcas
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await" id="content-marcas">
+            <div class="col-12 grid-margin">
+                <h1 class="text-light bg-dark pl-1 display-1">Marcas</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Crear Marca</h4>
+                        <form class="form-sample">
+                            <div class="col-sm-12 row">
+                                <div class="form-group col-sm-6">
+                                    <label for="marca_nombre">Nombre de la categoria</label>
+                                    <input type="text" class="form-control input-limpiable" id="marca_nombre" placeholder="Nombre">
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="marca_descripcion">Descripcion</label>
+                                    <input type="text" class="form-control input-limpiable" id="marca_descripcion" placeholder="Descripcion">
+                                </div>
+                            </div>
+                        </form>
+                        <button type="button" class="btn btn-outline-warning btn-fw" onclick="LimpiarCampos()">
+                            Limpiar Campos
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-fw" onclick="CrearMarca()">
+                            Crear Marca
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 grid-margin">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Listado General de Marcas</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="table-responsive">
+                                    <table class="table data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Nombre</th>
+                                                <th>Descripcion</th>
+                                                <th>Opciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id='marcas-t-body'>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% include 'global/components/modal.html' %}
+{% endblock %}
+
+
+{% block js %}
+<script src="{% static 'global/js/productos/script.js' %}"></script>
+
+<script>
+    const getMarcasTable = async () => {
+        try {
+            const { data } = await axios.get('marcas/')
+            let marcasHtml = ''
+            let cont = 0
+            for (marca of data) {
+                marcasHtml +=
+                    `
+                        <tr>
+                            <td>${++cont}</td>
+                            <td>${marca.nombre}</td>
+                            <td>${marca.descripcion}</td>
+                            <td>
+                                <i class="mdi mdi-eye-outline mr-3" onclick="MarcaDetalle(${marca.id})"
+                                    data-toggle="modal" data-target="#modal"></i>
+                                <i class="mdi mdi-trash-can adminonly" onclick="MarcaEliminar(${marca.id})"></i>
+                            </td>
+                        </tr>
+                    `
+            }
+            $('#marcas-t-body').html(marcasHtml)
+            InitDataTable()
+        } catch (err) {
+            showAlert('error-message', {
+                title: 'No se pudieron cargar las marcas, intente mas tarde'
+            })
+        }
+    }
+
+    const MarcaEliminar = async marcaId => {
+        showAlert('warning-message-and-cancel', {
+            title: 'Eliminar Marca',
+            text: 'Esta seguro que quiere eliminar la marca?'
+        })
+
+        $('.swal-button--confirm').on('click', async function() {            
+            try {
+                MostrarLoader()
+                const response = await axios.patch(`marcas/${marcaId}/`, {estado: 2})
+                if (response.status === 200) {
+                    OcultarLoader()
+                    showAlert('success-message', {
+                        title: 'Marca eliminada con exito'
+                    })
+                    $('.btn-success-confirm').on('click', function () {
+                        location.reload()
+                    })
+                }
+            } catch (err) {
+                OcultarLoader()
+                showAlert('error-message', {title: 'No se pudo eliminar la marca, intente mas tarde'})
+            }
+        })   
+    }
+
+    const MarcaDetalle = async marcaId => {
+        const bodyHtml = `
+            <form class="">
+                <div class="form-group">
+                    <label for="marca_nombre_modal">Nombre de la categoria</label>
+                    <input type="text" class="form-control" id="marca_nombre_modal" placeholder="Nombre">
+                </div>
+                <div class="form-group">
+                    <label for="marca_descripcion_modal">Descripcion</label>
+                    <input type="text" class="form-control" id="marca_descripcion_modal" placeholder="Categoria">
+                </div>
+            </form>
+        `
+        const footerHtml = `
+            <button type="button" class="btn btn-info btn-rounded btn-fw loader-await adminonly" id="btn_editar_marca">Guardar Cambios</button>
+            <button type="button" class="btn btn-light btn-rounded btn-fw adminonly" data-dismiss="modal">Cancelar</button>
+        `
+        ShowModal('modal', 'Detalle de la categoria', bodyHtml, footerHtml)
+        await ValidarPermisos()
+        try {
+            MostrarLoader()
+            const { data } = await axios.get(`marcas/${marcaId}/`)
+            $('#marca_nombre_modal').val(data.nombre)
+            $('#marca_descripcion_modal').val(data.descripcion)
+            OcultarLoader()
+        } catch (err) {
+            OcultarLoader()
+            showAlert('error-message', {title: 'No se pudieron cargar los datos de la marca'})
+        }
+
+        $('#btn_editar_marca').on('click', async () => {
+            const marca_nombre = $('#marca_nombre_modal').val()
+            const marca_descripcion = $('#marca_descripcion_modal').val()
+
+            if ( marca_nombre === '') {
+                showDangerToast('El nombre de la marca requerida')
+                return
+            }
+
+            const data = {
+                nombre: marca_nombre,
+                descripcion: marca_descripcion
+            }
+
+            showAlert('warning-message-and-cancel', {
+                title: 'Editar Marca',
+                text: 'Esta seguro que quiere guardar los cambios?'
+            })
+
+            $('.swal-button--confirm').on('click', async function() {            
+                try {
+                    MostrarLoader()
+                    const response = await axios.patch(`marcas/${marcaId}/`, data)
+                    if (response.status === 200) {
+                        OcultarLoader()
+                        showAlert('success-message', {
+                            title: 'Marca editada con exito'
+                        })
+                        $('.btn-success-confirm').on('click', function () {
+                            location.reload()
+                        })
+                    }
+                } catch (err) {
+                    OcultarLoader()
+                    showAlert('error-message', {title: 'No se pudieron editar los datos de la marca, intente mas tarde'})
+                }
+            })
+
+        })
+    }
+
+    ( async () => {
+        MostrarLoader()
+        await getMarcasTable()
+        await ValidarPermisos()
+        OcultarLoader()
+    })()
+</script>
+{% endblock %}

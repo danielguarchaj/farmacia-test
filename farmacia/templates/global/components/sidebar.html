@@ -1,0 +1,83 @@
+<!-- partial:partials/_sidebar.html -->
+<nav class="sidebar sidebar-offcanvas loader-await" id="sidebar">
+<ul class="nav">
+    <li class="nav-item">
+    <a class="nav-link" href="{% url 'frontend:dashboard' %}">
+        <i class="mdi mdi-view-dashboard-outline menu-icon"></i>
+        <span class="menu-title">Inicio</span>
+    </a>
+    </li>
+    <li class="nav-item adminonly">
+        <a class="nav-link" href="{% url 'frontend:compras' %}">
+            <i class="mdi mdi-package-variant-closed menu-icon"></i>
+            <span class="menu-title">Compras</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-toggle="collapse" href="#productos-collapsible" aria-expanded="false" aria-controls="productos-collapsible">
+            <i class="mdi mdi-pill menu-icon"></i>
+            <span class="menu-title">Inventario</span>
+            <i class="menu-arrow"></i>
+        </a>
+        <div class="collapse" id="productos-collapsible">
+            <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a href="{% url 'frontend:productos' %}" class="nav-link">Productos</a></li>
+                <li class="nav-item"> <a href="{% url 'frontend:marcas' %}" class="nav-link">Marcas</a></li>
+                <li class="nav-item"> <a href="{% url 'frontend:categorias' %}" class="nav-link">Categorias</a></li>
+                <li class="nav-item"> <a href="{% url 'frontend:presentaciones' %}" class="nav-link">Presentaciones</a></li>
+            </ul>
+        </div>
+    </li>
+    {% comment %} <li class="nav-item">
+        <a class="nav-link" href="{% url 'frontend:consultas' %}">
+            <i class="mdi mdi-medical-bag menu-icon"></i>
+            <span class="menu-title">Consultas</span>            
+        </a>
+    </li> {% endcomment %}
+    <li class="nav-item">
+        <a class="nav-link" data-toggle="collapse" href="#consultas-collapsible" aria-expanded="false" aria-controls="consultas-collapsible">
+            <i class="mdi mdi-medical-bag menu-icon"></i>
+            <span class="menu-title">Consultas</span>
+            <i class="menu-arrow"></i>
+        </a>
+        <div class="collapse" id="consultas-collapsible">
+            <ul class="nav flex-column sub-menu">
+                <li class="nav-item adminonly"> <a class="nav-link" href="{% url 'frontend:consulta_nueva' %}">Nueva Consulta</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'frontend:consultas' %}">Ver Consultas</a></li>                
+            </ul>
+        </div>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'frontend:proveedores' %}">
+            <i class="mdi mdi-truck menu-icon"></i>
+            <span class="menu-title">Proveedores</span>            
+        </a>      
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'frontend:caja' %}">
+            <i class="mdi mdi-cash-multiple menu-icon"></i>
+            <span class="menu-title">Caja</span>            
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'frontend:pacientes' %}">
+            <i class="mdi mdi-account-heart menu-icon"></i>
+            <span class="menu-title">Pacientes</span>            
+        </a>
+    </li>
+    <li class="nav-item adminonly">
+        <a class="nav-link" data-toggle="collapse" href="#reportes-collapsible" aria-expanded="false" aria-controls="reportes-collapsible">
+            <i class="mdi mdi-chart-bar menu-icon"></i>
+            <span class="menu-title">Reportes</span>
+            <i class="menu-arrow"></i>
+        </a>
+        <div class="collapse" id="reportes-collapsible">
+            <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a href="{% url 'frontend:reporte_ventas' %}" class="nav-link">Ventas</a></li>
+                <li class="nav-item"> <a href="{% url 'frontend:reporte_transacciones' %}" class="nav-link">Transacciones</a></li>
+                <li class="nav-item"> <a href="{% url 'frontend:reporte_productos' %}" class="nav-link">Lotes</a></li>
+            </ul>
+        </div>
+    </li>
+</ul>
+</nav>

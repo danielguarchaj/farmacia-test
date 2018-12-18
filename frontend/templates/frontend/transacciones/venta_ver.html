@@ -1,0 +1,286 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+
+{% block title %}
+Detalle de venta
+{% endblock %}
+
+
+{% block content %}
+<div class="container-scroller">
+    {% include 'global/components/navbar.html' %}
+    <!-- Content -->
+    <div class="container-fluid page-body-wrapper">
+        {% include 'global/components/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'global/components/loader.html' %}
+            <div class="content-wrapper loader-await">
+            <div class="row contenido-venta">
+                <div class="col-lg-12">
+                    <div class="card px-2">
+                        <div class="card-body" id="card-venta">
+                            <div class="container-fluid">
+                                <!-- <p class="mt-5 mb-2"><b>Cambiar responsable</b></p>
+                                <select class="select-2" id="users_select"></select> -->
+                                <h3 class="text-right my-5" id="venta_numero">Invoice&nbsp;&nbsp;#INV-17</h3>
+                                <hr>
+                            </div>
+                            <div class="container-fluid d-flex justify-content-between">
+                                <div class="col-lg-3 pl-0">
+                                <p class="mt-5 mb-2"><b>Responsable</b></p>
+                                <p id="venta_responsable"></p>
+                                </div>
+                                <div class="col-lg-3 pr-0">
+                                    <p class="mt-5 mb-2 text-right"><b>Observaciones</b></p>
+                                    <p class="text-right" id="venta_observaciones">
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="container-fluid d-flex justify-content-between">
+                                <div class="col-lg-3 pl-0">
+                                    <p class="mt-5"><b>Fecha y hora de creacion</b></p>
+                                    <p class="" id="venta_fecha">Invoice Date : 23rd Jan 2016</p>
+                                </div>
+                            </div>
+                            <div class="container-fluid mt-5 d-flex justify-content-center w-100">
+                                <div class="table-responsive w-100">
+                                    <table class="table">
+                                        <thead>
+                                            <tr class="bg-dark text-black">
+                                                <th>#</th>
+                                                <th>Lote</th>
+                                                <th>Producto</th>
+                                                <th>Cantidad</th>
+                                                <th>Precio Venta Unitario</th>
+                                                <th>Subtotal</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detalle-venta-t-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="container-fluid mt-5 w-100">
+                                <h4 class="text-right mb-5" id="venta_total">Total : $13,986</h4>
+                                <hr>
+                            </div>
+                            <div class="container-fluid w-100">
+                                <button class="btn btn-primary float-right mt-4 adminonly" onclick="VentaEliminar()"><i class="mdi mdi-trash-can mr-1"></i>Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            {% include 'global/components/footer.html' %}
+        </div>
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
+{% include 'global/components/modal.html' %}
+{% endblock %}
+
+
+{% block js %}
+
+<script src="{% static 'global/js/reportes/script.js' %}"></script>
+<script src="{% static 'global/js/transacciones/script.js' %}"></script>
+
+<script>
+    let detalle_venta = []
+    let lotesEliminar = []
+    let lotesEditar = []
+    let venta = {}
+
+    const ToggleRadio  = () => {
+        const radioSelected = $('input[name=optionsRadios]:checked').val()
+        if (radioSelected === '0') {
+            $('#lote_costo_unitario').prop('disabled', false)
+            $('#lote_subtotal').prop('disabled', true)
+        }else{
+            $('#lote_subtotal').prop('disabled', false)
+            $('#lote_costo_unitario').prop('disabled', true)
+        }
+    }
+    let estaVenta = {}
+    const getDetalleVenta = async () => {
+        try {
+            MostrarLoader()
+            const ventaId = getUrlParameter()
+            const {
+                data
+            } = await axios.get(`ventas/${ventaId}/`)
+            estaVenta = data
+            venta = data
+            let cont = 0
+            let ventasHtml = ''
+            for(detalle of data.detalle_venta){
+                ventasHtml += `
+                    <tr id="tr${detalle.id}">
+                        <td>${++cont}</td>
+                        <td id="td_codigo${detalle.id}">${detalle.lote.codigo}</td>
+                            <td id="td_producto${detalle.id}">
+                                <a href="/productos/${detalle.lote.producto.id}/" target="blank">
+                                    ${detalle.lote.producto.id} -
+                                    ${detalle.lote.producto.nombre} -
+                                    ${detalle.lote.producto.marca.nombre} -
+                                    ${detalle.lote.producto.presentacion.nombre} -
+                                    ${detalle.lote.producto.presentacion.descripcion}
+                                </a>
+                            </td>
+                        <td id="td_cantidad${detalle.id}">${detalle.cantidad}</td>
+                        <td id="td_precio_venta${detalle.id}">Q${detalle.precio_venta_real}</td>
+                        <td id="td_subtotal${detalle.id}">Q${detalle.subtotal}</td>
+                        <td>
+                            <a class="adminonly" href="/compras/${detalle.lote.compra}/" target="_blank">Ver Compra de Lote</a>
+                            <i class="mdi mdi-trash-can adminonly"
+                                onclick="DetalleVentaEliminar(${detalle.id})">
+                            </i>
+                            <i class="mdi mdi-eye-outline mr-3 adminonly" data-toggle="modal" data-target="#modal"
+                                onclick="EditarDetalleVenta(${detalle.id}, ${detalle.lote.id})">
+                            </i>
+                        </td>
+                    </tr>
+                `
+            }
+            $('#detalle-venta-t-body').html(ventasHtml)
+            $('#venta_numero').html(`Venta&nbsp;&nbsp;#${data.id}`)
+            $('#venta_observaciones').html(data.observaciones)
+            $('#venta_responsable').html(`${data.usuario.nombres} ${data.usuario.apellidos}`)
+            $('#venta_fecha').html(moment(data.fecha_hora_creacion, 'Y-MM-DD T H-m-s Z').format('DD/MM/Y, h:mm:ss a'))
+            $('#venta_total').html(`Total : Q${Number(data.total).toFixed(2)}`)
+            /*$('#users_select').val(data.usuario.id)
+            $(".select-2").select2({
+                theme: "bootstrap",
+                width: 'auto',
+                dropdownAutoWidth: true
+            });*/
+            InitDataTable()
+            OcultarLoader()
+        } catch (err) {
+            OcultarLoader()
+            showAlert('error-message', {
+                title: 'No se pudo cargar el detalle de la venta, intente mas tarde'
+            })
+            console.log(err)
+        }
+    }
+    const EditarDetalleVenta = async (detalleId, loteId) => {
+        const bodyHtml = `
+            <p class="card-description mb-3" id="lote_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_marca_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_disponibilidad_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_vencimiento_seleccionado"></p>
+            <p class="card-description mb-3" id="lote_precio_venta_original"></p>
+            <hr>
+            <form class="">
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label for="venta_cantidad"><b>Cantidad vendida</b></label>
+                        <input type="text" class="form-control" id="venta_cantidad" placeholder="Cantidad a vender"
+                                onkeypress="return ValidarTeclaEnInput(event, 'int')">
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label for="venta_precio_real"><b>Vendido en</b></label>
+                        <input type="text" class="form-control" id="venta_precio_real" placeholder="Precio Venta"
+                                onkeypress="return ValidarTeclaEnInput(event, 'decimal')">
+                    </div>
+                </div>
+            </form>
+        `
+        const footerHtml = `
+            <button type="button" class="btn btn-info btn-rounded btn-fw loader-await" id="btn_guardar_detalle_venta">Guardar Cambios</button>
+            <button type="button" class="btn btn-light btn-rounded btn-fw" data-dismiss="modal">Cancelar</button>
+        `
+        ShowModal('modal', 'Editar detalle de la venta', bodyHtml, footerHtml)
+        let _data = {}
+        let existenciaActual = 0
+        try {
+            MostrarLoader()
+            const loteReponse = await axios.get(`lotes-detailed/${loteId}/`)
+            var detalleResponse = await axios.get(`detalles-venta/${detalleId}/`)
+            existenciaActual = await getExistenciaActual(loteReponse.data.id, loteReponse.data.cantidad_comprada)
+            $('#lote_seleccionado').html( `<b>Producto: </b>
+                ${loteReponse.data.producto.nombre} -
+                ${loteReponse.data.producto.presentacion.nombre} -
+                ${loteReponse.data.producto.presentacion.descripcion}
+            `)
+            $('#lote_marca_seleccionado').html( `<b>Marca: </b> ${loteReponse.data.producto.marca.nombre}` )
+            $('#lote_disponibilidad_seleccionado').html( '<b>Disponibilidad: </b> ' + existenciaActual )
+            if (loteReponse.data.fecha_vencimiento) $('#lote_vencimiento_seleccionado').html('<b>Fecha de vencimiento: </b>' +
+                                            moment(loteReponse.data.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y') )
+            $('#lote_precio_venta_original').html( `<b>Precio Original: </b> Q${loteReponse.data.producto.precio_venta}` )
+            $('#venta_precio_real').val( detalleResponse.data.precio_venta_real )
+            $('#venta_cantidad').val( detalleResponse.data.cantidad )
+            OcultarLoader()
+
+        } catch (err) {
+            console.log(err)
+            OcultarLoader()
+            showAlert('error-message', {title: 'No se pudo cargar la informacion del lote seleccionado'})
+        }
+
+        $('#btn_guardar_detalle_venta').on('click', async () => {
+            const precio_venta = $('#venta_precio_real').val()
+            const cantidad = $('#venta_cantidad').val()
+            let errors = false
+            if (precio_venta === ''  ){
+                showDangerToast('Ingrese el precio de venta')
+                errors = true
+            }
+            if (Number(cantidad) < 1 || cantidad === '') {
+                showDangerToast('Ingrese una cantidad valida')
+                errors = true
+            }
+            if ( Number(cantidad) > (Number(existenciaActual) + Number(detalleResponse.data.cantidad)) ){
+                showDangerToast('No existen suficientes productos para suplir la venta.')
+                errors = true
+            }
+
+            if (errors) return
+
+            try {
+                MostrarLoader()
+                const nuevoSubtotal = (Number(cantidad) * Number(precio_venta)).toFixed(2)
+                const detalleUpdate = await axios.patch(`detalles-venta/update/${detalleId}/`, {
+                    cantidad: cantidad,
+                    precio_venta_real: Number(precio_venta).toFixed(2),
+                    subtotal: nuevoSubtotal
+                })
+                const subtotalViejo = Number(detalleResponse.data.subtotal);
+                const ventaResponse = await axios.get(`ventas/${getUrlParameter()}/`)
+                const nuevoTotal = Number(Number(ventaResponse.data.total) - Number(subtotalViejo) + Number(nuevoSubtotal)).toFixed(2)
+                if (detalleUpdate.status === 200) {
+                    const ventaUpdate = await axios.patch(`ventas/update/${getUrlParameter()}/`, {total:  nuevoTotal} ) 
+                    OcultarLoader()
+                    showAlert('success-message', {
+                        title: 'Detalle de venta editado con exito'
+                    })
+                    $('.btn-success-confirm').on('click', function () {
+                        location.reload()
+                    })
+                }
+            } catch (e) {
+                OcultarLoader()
+                showAlert('error-message', {
+                    title: 'No se pudo editar el detalle de la venta, intente nuevamente'
+                })
+                console.log(e)
+            }
+
+        })
+    }
+
+    ( async () => {
+
+        MostrarLoader()
+        await populateUsersSelect()
+        await getDetalleVenta()
+        await ValidarPermisos()
+
+    })()
+</script>
+{% endblock %}
