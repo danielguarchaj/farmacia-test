@@ -17,7 +17,7 @@ const MostrarLoader = () => {
 }
 
 const OcultarLoader = () => {
-    $('.square-box-loader').hide()
+    $('.square-box-loader').remove()
     $('.loader-await').show()
 }
 

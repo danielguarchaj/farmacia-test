@@ -342,8 +342,11 @@ Ventas
     ( async () => {
         MostrarLoader()
         await getLotes()
-        $('#nueva-venta-btn').hide()
+        await ValidarPermisos()
         OcultarLoader()
+        $('#nueva-venta-btn').hide()
+        $('.dot-opacity-loader').hide()
+        
     }) ()
 </script>
 {% endblock %}
