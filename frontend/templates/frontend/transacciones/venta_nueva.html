@@ -342,11 +342,11 @@ Ventas
 
     ( async () => {
         MostrarLoader()
-        await getLotes()
         await ValidarPermisos()
-        OcultarLoader()
-        $('#nueva-venta-btn').hide()
         $('.dot-opacity-loader').hide()
+        $('#nueva-venta-btn').remove()
+        await getLotes()
+        OcultarLoader()
         
     }) ()
 </script>
