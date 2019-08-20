@@ -341,10 +341,10 @@ Ventas
     }
 
     ( async () => {
+        $('#nueva-venta-btn').remove()
         MostrarLoader()
         await ValidarPermisos()
         $('.dot-opacity-loader').hide()
-        $('#nueva-venta-btn').remove()
         await getLotes()
         OcultarLoader()
         
