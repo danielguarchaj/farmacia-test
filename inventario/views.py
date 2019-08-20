@@ -212,10 +212,26 @@ class VentaUpdate(generics.UpdateAPIView):
     queryset = Venta.objects.filter(estado=1)
     serializer_class = VentaUpdateSerializer
 
-class LoteDetailList(generics.ListAPIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = Lote.objects.filter(estado=1)
-    serializer_class = LoteDetailedSerializer
+# class LoteDetailList(generics.ListAPIView):
+#     permission_classes = (permissions.IsAuthenticated,)
+#     queryset = Lote.objects.filter(estado=1)
+#     serializer_class = LoteDetailedSerializer
+
+
+class LoteDetailList(APIView):
+    def get(self, request, format=None, **kwargs):
+        return Response([{
+            "id": lote.id,
+            "codigo": lote.codigo,
+            "producto": lote.producto.nombre + ' - ' + lote.producto.presentacion.nombre,
+            "producto_id": lote.producto.id,
+            "marca": lote.producto.marca.nombre,
+            "categoria": lote.producto.categoria.nombre,
+            "fecha_vencimiento": lote.fecha_vencimiento,
+            "precio_venta": lote.producto.precio_venta,
+            "existencias": lote.existencias,
+        } for lote in Lote.objects.all() if lote.existencias > 0])
+        
 
 class LoteRetrieveDetail(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated,)

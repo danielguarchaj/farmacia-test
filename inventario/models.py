@@ -1,10 +1,11 @@
 from django.db import models
 
+
 class PresentacionProducto(models.Model):
     nombre = models.CharField(max_length=75)
     descripcion = models.CharField(
         max_length=150,
-        blank=True, 
+        blank=True,
         null=True
     )
     estado = models.PositiveSmallIntegerField(
@@ -18,7 +19,7 @@ class PresentacionProducto(models.Model):
 
     def __str__(self):
         return self.nombre + ' ' + str(self.descripcion)
-    
+
 
 class Marca(models.Model):
     nombre = models.CharField(max_length=150)
@@ -31,15 +32,14 @@ class Marca(models.Model):
         ],
         default=1
     )
-    
+
     def __str__(self):
         return self.nombre + ' ' + str(self.descripcion)
-    
 
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=150)
-    descripcion = models.CharField(max_length=150 ,blank=True, null=True)
+    descripcion = models.CharField(max_length=150, blank=True, null=True)
     estado = models.PositiveSmallIntegerField(
         choices=[
             (0, 'Inactivo'),
@@ -51,19 +51,19 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre + ' ' + str(self.descripcion)
-    
+
 
 class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     precio_venta = models.DecimalField(
-        "Precio de venta", 
-        max_digits=8, 
+        "Precio de venta",
+        max_digits=8,
         decimal_places=2
     )
     referencia_ubicacion = models.CharField(
         "Referencia de Ubicacion",
         max_length=150,
-        blank=True, 
+        blank=True,
         null=True
     )
     minimo_permitido = models.IntegerField("Cantidad minima permitida")
@@ -93,15 +93,14 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre + ' Q' + str(self.precio_venta)
-    
 
 
 class Proveedor(models.Model):
     nombre = models.CharField(max_length=150)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     direccion = models.CharField(
-        max_length=150, 
-        blank=True, 
+        max_length=150,
+        blank=True,
         null=True
     )
     email = models.CharField(max_length=100, blank=True, null=True)
@@ -116,19 +115,18 @@ class Proveedor(models.Model):
 
     def __str__(self):
         return self.nombre + ' ' + str(self.email)
-    
 
 
 class VisitaProveedor(models.Model):
     fecha = models.DateField(auto_now=False, auto_now_add=False)
     motivo = models.CharField(
         max_length=150,
-        blank=True, 
+        blank=True,
         null=True
     )
     anotaciones = models.CharField(
         max_length=150,
-        blank=True, 
+        blank=True,
         null=True
     )
     proveedor = models.ForeignKey(
@@ -141,31 +139,31 @@ class VisitaProveedor(models.Model):
             (0, 'Inactivo'),
             (1, 'Activo'),
             (2, 'Eliminado'),
-            (3,'Atendido')
+            (3, 'Atendido')
         ],
         default=1
     )
 
     def __str__(self):
         return str(self.fecha) + ' ' + str(self.motivo)
-    
+
 
 class Compra(models.Model):
     fecha_hora_creacion = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(
-        max_digits=8, 
+        max_digits=8,
         decimal_places=2,
-        blank=True, 
+        blank=True,
         null=True
     )
     observaciones = models.CharField(
         max_length=150,
-        blank=True, 
+        blank=True,
         null=True
     )
     proveedor = models.ForeignKey(
         Proveedor,
-        on_delete = models.CASCADE,
+        on_delete=models.CASCADE,
         related_name='compras'
     )
     estado = models.PositiveSmallIntegerField(
@@ -179,19 +177,18 @@ class Compra(models.Model):
 
     def __str__(self):
         return str(self.fecha_hora_creacion) + ' ' + str(self.total)
-    
 
 
 class Lote(models.Model):
     codigo = models.CharField(max_length=20, blank=True, null=True)
     fecha_vencimiento = models.DateField(
-        "Fecha de vencimiento", 
-        auto_now=False,  
+        "Fecha de vencimiento",
+        auto_now=False,
         null=True
     )
     descripcion = models.CharField(
         max_length=150,
-        blank=True, 
+        blank=True,
         null=True
     )
     producto = models.ForeignKey(
@@ -225,7 +222,16 @@ class Lote(models.Model):
 
     def __str__(self):
         return str(self.codigo) + ' ' + self.producto.nombre + ' ' + str(self.fecha_vencimiento) + ' ' + str(self.descripcion)
-    
+
+    @property
+    def existencias(self):
+        from .models import DetalleVenta
+        from django.db.models import Sum
+        total_vendidos = DetalleVenta.objects.filter(lote=self).aggregate(total=Sum('cantidad'))
+        if total_vendidos is not None:
+            return self.cantidad_comprada
+        else:
+            return self.cantidad_comprada - total_vendidos['total']
 
 
 class Venta(models.Model):
@@ -233,7 +239,7 @@ class Venta(models.Model):
     total = models.DecimalField(max_digits=8, decimal_places=2)
     observaciones = models.CharField(
         max_length=150,
-        blank=True, 
+        blank=True,
         null=True
     )
     usuario = models.ForeignKey(
@@ -252,7 +258,6 @@ class Venta(models.Model):
 
     def __str__(self):
         return str(self.fecha_hora_creacion) + ' Q' + str(self.total)
-    
 
 
 class DetalleVenta(models.Model):
@@ -260,7 +265,7 @@ class DetalleVenta(models.Model):
     precio_venta_real = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        blank=True, 
+        blank=True,
         null=True
     )
     subtotal = models.DecimalField(
@@ -288,7 +293,6 @@ class DetalleVenta(models.Model):
 
     def __str__(self):
         return str(self.lote.producto.nombre) + ' ' + str(self.cantidad) + ' Q' + str(self.precio_venta_real)
-    
 
 
 class Transaccion(models.Model):
@@ -296,7 +300,7 @@ class Transaccion(models.Model):
         "Monto",
         max_digits=8,
         decimal_places=2,
-        blank=True, 
+        blank=True,
         null=True
     )
     usuario = models.ForeignKey(
@@ -325,4 +329,3 @@ class Transaccion(models.Model):
 
     def __str__(self):
         return str(self.monto) + ' ' + str(self.tipo) + ' ' + str(self.descripcion)
-    

@@ -116,26 +116,26 @@ Ventas
     const getLotes = async () => {
         try {
             const {data} = await axios.get('lotes/')
+            
             let lotesHtml = ''
             for (const lote of data) {
-                const existenciaActual = await getExistenciaActual(lote.id, lote.cantidad_comprada)
                 let fecha = 'N/A'
                 if (lote.fecha_vencimiento) fecha = moment(lote.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y')
-                let producto = ''
-                if (lote.producto.nombre) producto += lote.producto.nombre + ' - '
-                if (lote.producto.presentacion.nombre) producto += lote.producto.presentacion.nombre + ' - '
-                if (lote.producto.presentacion.descripcion) producto += lote.producto.presentacion.descripcion
+                // let producto = ''
+                // if (lote.producto.nombre) producto += lote.producto.nombre + ' - '
+                // if (lote.producto.presentacion.nombre) producto += lote.producto.presentacion.nombre + ' - '
+                // if (lote.producto.presentacion.descripcion) producto += lote.producto.presentacion.descripcion
                 lotesHtml += `
                     <tr id="tr_productos_${lote.id}">
                         <td>${lote.codigo}</td>
                         <td>
-                            <a href="/productos/${lote.producto.id}/" target="blank">${producto}</a>
+                            <a href="/productos/${lote.producto_id}/" target="blank">${lote.producto}</a>
                         </td>
-                        <td>${lote.producto.marca.nombre}</td>
-                        <td>${lote.producto.categoria.nombre} - ${lote.producto.categoria.descripcion}</td>
-                        <td>${Number(lote.producto.precio_venta).toFixed(2)}</td>
+                        <td>${lote.producto}</td>
+                        <td>${lote.marca}</td>
+                        <td>${Number(lote.precio_venta).toFixed(2)}</td>
                         <td>${fecha}</td>
-                        <td>${existenciaActual}</td>
+                        <td>${lote.existencias}</td>
                         <td>
                             <button class="btn btn-outline-primary" onclick="AgregarLote(${lote.id})"
                                     data-toggle="modal" data-target="#modal">Agregar a la venta</button>
@@ -146,6 +146,7 @@ Ventas
             $('#lotes-t-body').html(lotesHtml)
             InitDataTable()
         }catch (err) {
+            console.log(err)
             showAlert('error-message', {title: 'No se pudo cargar el inventario, intente mas tarde.'})
         }
     }
