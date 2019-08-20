@@ -187,14 +187,14 @@ Ventas
             MostrarLoader()
             const {data} = await axios.get(`lotes-detailed/${loteId}/`)          
             _data = data
-            existenciaActual = await getExistenciaActual(data.id, data.cantidad_comprada)
+            // existenciaActual = await getExistenciaActual(data.id, data.cantidad_comprada)
             $('#lote_seleccionado').html( `<b>Producto: </b>
                 ${data.producto.nombre} -
                 ${data.producto.presentacion.nombre} -
                 ${data.producto.presentacion.descripcion}
             `)
             $('#lote_marca_seleccionado').html( `<b>Marca: </b> ${data.producto.marca.nombre}` )
-            $('#lote_disponibilidad_seleccionado').html( '<b>Disponibilidad: </b> ' + existenciaActual )
+            $('#lote_disponibilidad_seleccionado').html( '<b>Disponibilidad: </b> ' + _data.existencias )
             if (data.fecha_vencimiento) $('#lote_vencimiento_seleccionado').html('<b>Fecha de vencimiento: </b>' +
                                             moment(data.fecha_vencimiento, 'Y-MM-DD').format('DD/MM/Y') )
             $('#lote_precio_venta_original').html( `<b>Precio Original: </b> Q${data.producto.precio_venta}` )
@@ -219,7 +219,7 @@ Ventas
                 showDangerToast('Ingrese una cantidad valida')
                 errors = true
             }
-            if (Number(cantidad) > Number(existenciaActual)){
+            if (Number(cantidad) > Number(_data.existencias)){
                 showDangerToast('No existen suficientes productos para suplir la venta.')
                 errors = true
             }

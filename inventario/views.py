@@ -63,11 +63,11 @@ class LotesReporte(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = LoteReporteSerializer
     queryset = Lote.objects.filter(estado=1).order_by('producto')
-    
+
 
 class ReporteTransacciones(generics.ListAPIView):
     serializer_class = TransaccionesSerializer
-    def get_queryset(self):        
+    def get_queryset(self):
 
         fecha_inicio = datetime.date(
             self.kwargs['ys'],
@@ -84,14 +84,14 @@ class ReporteTransacciones(generics.ListAPIView):
             datetime.datetime.combine(fecha_fin, datetime.time.max),
         ),
             estado=1
-        )        
+        )
 
         return queryset
 
 
 class ReporteVentas(generics.ListAPIView):
     serializer_class = VentaDetailSerializer
-    def get_queryset(self):        
+    def get_queryset(self):
 
         fecha_inicio = datetime.date(
             self.kwargs['ys'],
@@ -108,10 +108,9 @@ class ReporteVentas(generics.ListAPIView):
             datetime.datetime.combine(fecha_fin, datetime.time.max),
         ),
             estado=1
-        )        
+        )
 
         return queryset
-
 
 
 class TotalDebitos(APIView):
@@ -122,6 +121,7 @@ class TotalDebitos(APIView):
             total=Sum('monto')
         )
         return Response(total)
+
 
 class TotalCreditos(APIView):
     def get(self, request, format=None, **kwargs):
@@ -137,10 +137,10 @@ class LotesUnidadesVendidas(APIView):
     def get(self, request, format=None, **kwargs):
         lote_pk = kwargs.get('lote_pk')
         total = DetalleVenta.objects.filter(
-                lote=lote_pk, estado=1
-            ).aggregate(
-                total=Sum('cantidad')
-            )
+            lote=lote_pk, estado=1
+        ).aggregate(
+            total=Sum('cantidad')
+        )
         return Response(total)
 
 
@@ -148,6 +148,7 @@ class VentasTotales(APIView):
     def get(self, request, format=None, **kwargs):
         total = Venta.objects.filter(estado=1).aggregate(total=Sum('total'))
         return Response(total)
+
 
 class ComprasTotales(APIView):
     def get(self, request, format=None, **kwargs):
@@ -157,7 +158,8 @@ class ComprasTotales(APIView):
 
 class DetalleVentaList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = DetalleVenta.objects.filter(estado=1).order_by('lote__producto__id')
+    queryset = DetalleVenta.objects.filter(
+        estado=1).order_by('lote__producto__id')
     serializer_class = DetalleVentaDetailedLotesSerializer
 
 
@@ -165,6 +167,7 @@ class DetalleVentaRetrieve(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = DetalleVenta.objects.filter(estado=1)
     serializer_class = DetalleVentaDetailedLotesSerializer
+
 
 class DetalleVentaUpdate(generics.UpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -177,21 +180,23 @@ class TransaccionCreate(generics.CreateAPIView):
     queryset = Transaccion.objects.filter(estado=1)
     serializer_class = TransaccionCreateSerializer
 
+
 class TransaccionesList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Transaccion.objects.filter(estado=1)
     serializer_class = TransaccionesSerializer
+
 
 class TransaccionRetrieveUpdate(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Transaccion.objects.filter(estado=1)
     serializer_class = TransaccionesSerializer
 
+
 class VentaCreate(generics.CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Venta.objects.filter(estado=1)
     serializer_class = VentaCreateSerializer
-
 
 
 class VentaList(generics.ListAPIView):
@@ -206,6 +211,7 @@ class VentaRetrieve(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Venta.objects.filter(estado=1)
     serializer_class = VentaDetailSerializer
+
 
 class VentaUpdate(generics.UpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -230,18 +236,20 @@ class LoteDetailList(APIView):
             "fecha_vencimiento": lote.fecha_vencimiento,
             "precio_venta": lote.producto.precio_venta,
             "existencias": lote.existencias,
-        } for lote in Lote.objects.all() if lote.existencias > 0])
-        
+        } for lote in Lote.objects.filter(estado=1) if lote.existencias > 0])
+
 
 class LoteRetrieveDetail(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Lote.objects.all().exclude(estado=2)
     serializer_class = LoteDetailedSerializer
 
+
 class LoteRetrieveUpdate(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Lote.objects.all().exclude(estado=2)
     serializer_class = LoteSerializer
+
 
 class CompraCreate(generics.CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -271,7 +279,7 @@ class ProveedoresListCreate(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Proveedor.objects.all().exclude(estado=2)
     serializer_class = ProveedorSerializer
-    
+
 
 class ProveedoresUpdateRetrieve(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -307,6 +315,7 @@ class ProductoUpdate(generics.UpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Producto.objects.all()
     serializer_class = ProductoUpdateSerializer
+
 
 class ProductoRetrieve(generics.RetrieveUpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -350,15 +359,12 @@ class CategoriaUpdateRetrieve(generics.RetrieveUpdateAPIView):
     serializer_class = CategoriaSerializer
 
 
-
-
-
 # class ProveedorCreate(generics.CreateAPIView):
 #     permission_classes = (permissions.IsAuthenticated,)
 #     queryset = Consulta.objects.all()
 #     serializer_class = ConsultaCreateSerializer
 
-# class ConsultasL(generics.ListAPIView): 
+# class ConsultasL(generics.ListAPIView):
 #     permission_classes = (permissions.IsAuthenticated,)
 #     queryset = Consulta.objects.all().exclude(estado=2)
 #     serializer_class = ConsultaSerializer
@@ -371,3 +377,65 @@ class CategoriaUpdateRetrieve(generics.RetrieveUpdateAPIView):
 # class ConsultaU(generics.UpdateAPIView):
 #     queryset = Consulta.objects.all()
 #     serializer_class = ConsultaUpdateSerializer
+
+
+class DashboardInfo(APIView):
+    def get(self, request, format=None, *args, **kwargs):
+        from consultas.models import Paciente, Consulta
+        from django.db.models import Sum
+
+        # sum_pacientes = Paciente.objects.filter(estado=1).aggregate(total=Sum('cantidad'))
+        sum_pacientes = Paciente.objects.filter(estado=1).count()
+        sum_productos = Producto.objects.filter(estado=1).count()
+        sum_ventas = Venta.objects.filter(estado=1).count()
+        sum_consultas = Consulta.objects.filter(estado=1).count()
+
+        compras_total = Compra.objects.filter(
+            estado=1).aggregate(total=Sum('total'))
+        ventas_total = Venta.objects.filter(
+            estado=1).aggregate(total=Sum('total'))
+        consultas_total = Consulta.objects.filter(
+            estado=1).aggregate(total=Sum('costo'))
+        debitos_total = Transaccion.objects.filter(
+            estado=1, tipo=1).aggregate(total=Sum('monto'))
+        creditos_total = Transaccion.objects.filter(
+            estado=1, tipo=2).aggregate(total=Sum('monto'))
+
+        fecha_inicio = datetime.date(
+            self.kwargs['ys'],
+            self.kwargs['ms'],
+            self.kwargs['ds']
+        )
+        fecha_fin = datetime.date(
+            self.kwargs['ye'],
+            self.kwargs['me'],
+            self.kwargs['de']
+        )
+        ventas = [
+            {
+                "fecha": venta.fecha_hora_creacion,
+                "observaciones": venta.observaciones,
+                "encargado": venta.usuario.nombres + ' ' + venta.usuario.apellidos,
+                "total": venta.total,
+                "id": venta.pk
+            } for venta in Venta.objects.filter(fecha_hora_creacion__range=(
+                datetime.datetime.combine(fecha_inicio, datetime.time.min),
+                datetime.datetime.combine(fecha_fin, datetime.time.max),
+            ),
+                estado=1
+            )
+        ]
+        response = {
+            'sum_pacientes': sum_pacientes,
+            'sum_productos': sum_productos,
+            'sum_ventas': sum_ventas,
+            'sum_consultas': sum_consultas,
+            'compras': compras_total,
+            'ventas_total': ventas_total,
+            'consultas': consultas_total,
+            'debitos': debitos_total,
+            'creditos': creditos_total,
+            'ventas': ventas,
+        }
+
+        return Response(response)

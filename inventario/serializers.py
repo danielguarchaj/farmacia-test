@@ -194,7 +194,19 @@ class LoteDetailedSerializer(serializers.ModelSerializer):
     producto = ProductoDetailSerializer()
     class Meta:
         model = Lote
-        fields = '__all__'
+        fields = (
+            'cantidad_comprada',
+            'codigo',
+            'compra',
+            'costo_unitario',
+            'descripcion',
+            'estado',
+            'fecha_vencimiento',
+            'id',
+            'producto',
+            'subtotal',
+            'existencias'
+        )
 
 
 class CompraDetailSerializer(serializers.ModelSerializer):

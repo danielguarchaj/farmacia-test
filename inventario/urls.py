@@ -62,6 +62,8 @@ urlpatterns = [
             , views.ReporteTransacciones.as_view(), name='reporte-ventas'),     
     path('reportes/lotes/', views.LotesReporte.as_view(), name='reporte-lotes'),
 
+    path('dashboard/<int:ys>/<int:ms>/<int:ds>/<int:ye>/<int:me>/<int:de>/', views.DashboardInfo.as_view(), name='dashboard-info'),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
