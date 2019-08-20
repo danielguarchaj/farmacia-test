@@ -228,7 +228,7 @@ class Lote(models.Model):
         from .models import DetalleVenta
         from django.db.models import Sum
         total_vendidos = DetalleVenta.objects.filter(lote=self).aggregate(total=Sum('cantidad'))
-        if total_vendidos is not None:
+        if total_vendidos['total'] is None:
             return self.cantidad_comprada
         else:
             return self.cantidad_comprada - total_vendidos['total']
