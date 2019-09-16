@@ -1,2 +1,2 @@
-Farmacia Edna Project
+Farmacia Project
 description
